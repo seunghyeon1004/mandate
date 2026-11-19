@@ -1,0 +1,102 @@
+{
+  "name": "Mandate demo agent",
+  "description": "Generic sign-up and browsing agent. It acts only under a mandate signed by a verified adult human (Concordium ID, zero-knowledge age proof), signs every HTTP request with its CIS-8-bound key, and pays x402 invoices in CCD from its registered agent wallet. Testnet demo.",
+  "url": "https://seunghyeon1004.github.io/mandate/agents/1261/agent-card.json",
+  "version": "0.1.0",
+  "defaultInputModes": [
+    "text/markdown",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "text/markdown",
+    "application/json"
+  ],
+  "authentication": {
+    "schemes": []
+  },
+  "skills": [
+    {
+      "id": "signup",
+      "name": "Sign up",
+      "description": "Creates an account on a site that accepts Concordium mandates instead of a CAPTCHA.",
+      "tags": [
+        "mandate",
+        "signup"
+      ]
+    },
+    {
+      "id": "post_comment",
+      "name": "Post a comment",
+      "description": "Posts a comment on behalf of the mandate issuer.",
+      "tags": [
+        "mandate"
+      ]
+    },
+    {
+      "id": "buy_report",
+      "name": "Buy a report",
+      "description": "Buys a paid resource via x402 in CCD within the mandate's spend caps.",
+      "tags": [
+        "mandate",
+        "x402"
+      ]
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "extensions": [
+      {
+        "uri": "https://docs.concordium.com/a2a-extensions/concordium-badge/v1",
+        "description": "Verified by Concordium badge — on-chain agent identity in a CIS-8004 registry",
+        "required": false,
+        "params": {
+          "tokenAddress": "ccd:4221332d34e1694168c2a0c0b3fd0f27/cis-2:JyP9YMpKL9vhHC2hgA2pc",
+          "owner": {
+            "account": "ccd:4221332d34e1694168c2a0c0b3fd0f27:4jjXocyWa2vkaRjW7BAvQEvF8zzjrLRrktDFjExXkzKMKztn3b"
+          },
+          "agentWallet": "ccd:4221332d34e1694168c2a0c0b3fd0f27:4CZmvBRju8WLtp2mrbqeZvGJ5jmPyX9p3xuNfWLHmqdfManc6U",
+          "contracts": {
+            "cis8004": "ccd:4221332d34e1694168c2a0c0b3fd0f27:12802.0",
+            "cis8": "ccd:4221332d34e1694168c2a0c0b3fd0f27:12801.0"
+          },
+          "verify": "Resolve tokenAddress via CIS-8004 agent_of; confirm owner + status=Active + card SHA-256 == metadata_hash.",
+          "verification": {
+            "service": "Concordium Agent Registry",
+            "verifyUrl": "https://agent-registry-mcp.concordium.com/v1/badge-check/JyP9YMpKL9vhHC2hgA2pc",
+            "mcp": "https://agent-registry-mcp.concordium.com/mcp",
+            "docs": "https://docs.concordium.com/en/mainnet/technical-reference/agent-registry/concordium-badge.html"
+          }
+        }
+      },
+      {
+        "uri": "https://seunghyeon1004.github.io/mandate/a2a-extensions/mandate/v1/",
+        "description": "Mandate: requests carry a mandate signed by the agent's owner (scope, expiry, spend caps, age proof) and are signed with the agent's CIS-8 key. Verifiers check them against Concordium.",
+        "required": false,
+        "params": {
+          "requestHeaders": [
+            "Mandate",
+            "Mandate-Signature"
+          ],
+          "signingKey": {
+            "cis8": {
+              "namespace": "solana:testnet",
+              "keyType": "ed25519",
+              "scheme": "solana-ed25519",
+              "publicKeyHex": "4b57310876f422ae3ff6df7634327d74e67111fd05b0990f64de1fb327897be8"
+            }
+          },
+          "anchor": "CIS-8004 agent metadata key mandate:<id> = sha256:<JCS hash>|exp:<unix> or revoked|at:<unix>",
+          "verifyPage": "https://seunghyeon1004.github.io/mandate/verify/",
+          "spec": "https://seunghyeon1004.github.io/mandate/a2a-extensions/mandate/v1/"
+        }
+      }
+    ]
+  },
+  "registrations": [
+    {
+      "agentId": 1261,
+      "agentRegistry": "ccd:4221332d34e1694168c2a0c0b3fd0f27:12802.0"
+    }
+  ]
+}

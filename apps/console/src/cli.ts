@@ -7,7 +7,8 @@
 import { parseArgs } from "node:util";
 import { anchorKey, anchorValue, mandateHash } from "@mandate/core";
 import { context, explorerTx, state } from "@mandate/node";
-import { anchorStatus, issueMandate, loadMandate, registerAgent, revokeMandate, sponsorClient, type AgentState } from "./issuer.ts";
+import { anchorStatus, buildCard, issueMandate, loadMandate, pinCard, registerAgent, revokeMandate, sponsorClient, type AgentState } from "./issuer.ts";
+import { REPO_ROOT, saveState } from "@mandate/node";
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -41,7 +42,22 @@ switch (cmd) {
     console.log(JSON.stringify({ id: sm.mandate.id, hash: mandateHash(sm.mandate), key: anchorKey(sm.mandate.id), expected: anchorValue(sm.mandate), onChain: await anchorStatus(ctx, sm.mandate) }, null, 2));
     break;
   }
+  case "card": {
+    const agent = state<AgentState>("agent.json")!;
+    const c = await buildCard(ctx, agent, REPO_ROOT);
+    saveState("card.json", c);
+    console.log(JSON.stringify(c, null, 2));
+    break;
+  }
+  case "pin-card": {
+    const agent = state<AgentState>("agent.json")!;
+    const c = state<{ sha256: string }>("card.json")!;
+    const r = await pinCard(ctx, sponsor, agent, c.sha256);
+    saveState("card-pin.json", r);
+    console.log(JSON.stringify({ setAgentURI: explorerTx(r.tx.hash), feePayer: r.tx.feePayer, servedSha256: r.servedSha, badge_valid: r.badge.badge_valid, issues: r.badge.issues, checks: r.badge.checks }, null, 2));
+    break;
+  }
   default:
-    console.log("usage: mandate register | issue [...] | revoke [id] | status [id]");
+    console.log("usage: mandate register | card | pin-card | issue [...] | revoke [id] | status [id]");
 }
 process.exit(0);

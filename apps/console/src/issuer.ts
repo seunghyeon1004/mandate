@@ -209,3 +209,59 @@ export function loadMandate(id?: string): SignedMandate {
 }
 
 export { grpcAgentOf, bytesToHex };
+
+// ---------------- Agent Card (A2A) with the Verified by Concordium badge and the Mandate extension ----------------
+
+export const PAGES_BASE = process.env.MANDATE_PAGES_BASE ?? "https://seunghyeon1004.github.io/mandate";
+export const MANDATE_EXTENSION_URI = `${PAGES_BASE}/a2a-extensions/mandate/v1/`;
+
+export function cardUrl(tokenId: string): string {
+  return `${PAGES_BASE}/agents/${tokenId}/agent-card.json`;
+}
+
+/** Build the card with the hosted MCP (badge included), add the Mandate extension, write it under site/ for GitHub Pages. */
+export async function buildCard(ctx: Ctx, agent: AgentState, repoRoot: string): Promise<{ file: string; sha256: string; url: string }> {
+  const url = cardUrl(agent.tokenId);
+  const b = await ctx.mcp.call<{ agent_card_json: string }>("build_agent_card", {
+    name: "Mandate demo agent",
+    description: "Generic sign-up and browsing agent. It acts only under a mandate signed by a verified adult human (Concordium ID, zero-knowledge age proof), signs every HTTP request with its CIS-8-bound key, and pays x402 invoices in CCD from its registered agent wallet. Testnet demo.",
+    agent_uri: url, owner_account: agent.owner, agent_wallet: agent.agentWallet, token_id: agent.tokenId, version: "0.1.0",
+    skills: [
+      { id: "signup", name: "Sign up", description: "Creates an account on a site that accepts Concordium mandates instead of a CAPTCHA.", tags: ["mandate", "signup"] },
+      { id: "post_comment", name: "Post a comment", description: "Posts a comment on behalf of the mandate issuer.", tags: ["mandate"] },
+      { id: "buy_report", name: "Buy a report", description: "Buys a paid resource via x402 in CCD within the mandate's spend caps.", tags: ["mandate", "x402"] },
+    ],
+  });
+  const card = JSON.parse(b.agent_card_json);
+  card.capabilities.extensions.push({
+    uri: MANDATE_EXTENSION_URI,
+    description: "Mandate: requests carry a mandate signed by the agent's owner (scope, expiry, spend caps, age proof) and are signed with the agent's CIS-8 key. Verifiers check them against Concordium.",
+    required: false,
+    params: {
+      requestHeaders: ["Mandate", "Mandate-Signature"],
+      signingKey: { cis8: { namespace: AGENT_NAMESPACE, keyType: "ed25519", scheme: AGENT_SCHEME, publicKeyHex: agent.agentKeyPublicHex } },
+      anchor: "CIS-8004 agent metadata key mandate:<id> = sha256:<JCS hash>|exp:<unix> or revoked|at:<unix>",
+      verifyPage: `${PAGES_BASE}/verify/`,
+      spec: MANDATE_EXTENSION_URI,
+    },
+  });
+  const text = JSON.stringify(card, null, 2) + "\n";
+  const { mkdirSync, writeFileSync } = await import("node:fs");
+  const dir = resolve(repoRoot, "site", "agents", agent.tokenId);
+  mkdirSync(dir, { recursive: true });
+  const file = resolve(dir, "agent-card.json");
+  writeFileSync(file, text);
+  return { file, sha256: sha256Hex(new TextEncoder().encode(text)), url };
+}
+
+/** After Pages serves the card: check the served bytes, pin agent_uri + SHA-256 on chain (sponsored), then run the hosted badge check. */
+export async function pinCard(ctx: Ctx, sponsor: SponsorClient, agent: AgentState, localSha256: string) {
+  const url = cardUrl(agent.tokenId);
+  const served = new Uint8Array(await (await fetch(url, { cache: "no-store" })).arrayBuffer());
+  const servedSha = sha256Hex(served);
+  if (servedSha !== localSha256) throw new Error(`Pages serves different bytes (${servedSha.slice(0, 12)} != ${localSha256.slice(0, 12)}); wait for the deploy`);
+  const human = accountKey("human");
+  const tx = ok(await sendContractUpdate(ctx.client, { handle: ctx.registry.cis8004, entrypoint: "setAgentURI", params: { token_id: tokenIdHex(agent.tokenId), agent_uri: { Some: [url] }, metadata_hash: { Some: [hexToBytes(servedSha)] } } }, human, sponsor), "setAgentURI");
+  const badge = await ctx.mcp.checkBadge(agent.badge);
+  return { tx, servedSha, badge };
+}
