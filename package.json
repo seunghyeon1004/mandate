@@ -11,10 +11,12 @@
     "apps/*"
   ],
   "scripts": {
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -b && tsc -p tsconfig.apps.json",
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
-    "test:web": "playwright test"
+    "test:web": "playwright test",
+    "mandate": "node apps/console/src/cli.ts",
+    "operator": "node apps/facilitator/src/main.ts"
   },
   "devDependencies": {
     "@types/express": "5.0.6",

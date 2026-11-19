@@ -47,3 +47,39 @@ Logged-out event pages show only agenda and attachment titles; "Summary" and "Wa
 ## Decisions
 - Monorepo with npm workspaces (pnpm not installed; not needed).
 - Commit trailer: see Gate 0 report (open question to the lead).
+
+## Gate 1 findings (2026-11-19, testnet, each found by running it)
+
+### Accounts (new, throwaway, testnet only)
+Two identities from the self-service IdP 0 form, filled with Playwright's bundled Chromium with invented values ("Test Human" DOB 1990-01-01, "Test Operator" DOB 1985-01-01, document number TEST-0001). Seeds are in `../.secrets` (chmod 600), never in the repo.
+| Role | Account | Funded |
+| --- | --- | --- |
+| human (issuer, NFT owner) | `4jjXocyWa2vkaRjW7BAvQEvF8zzjrLRrktDFjExXkzKMKztn3b` | no: 0 CCD, all its transactions are sponsored |
+| agentWallet | `4CZmvBRju8WLtp2mrbqeZvGJ5jmPyX9p3xuNfWLHmqdfManc6U` | one faucet drop |
+| sponsor / facilitator / verifier | `3jBkXyEm6pSUwXqvyFptgtg3xN3LdBcSfmcnguGdtNtn7bJgnT` | one faucet drop |
+| site (payee, receipts) | `4KGQ9ExEqXKjrEMDsqf6WJtVCyFxC4g1qYCShPsni2UyMa7yey` | one faucet drop |
+Agent token 1261, badge `JyP9YMpKL9vhHC2hgA2pc`.
+
+### Protocol and registry details not in the docs
+- **setAgentWallet proof for a native Concordium wallet**: ed25519 signature by the wallet account's key over the bytes from MCP `set_agent_wallet_canonical_bytes`, serialized as concordium-std `AccountSignatures` = `01 00 01 00 00 || sig64`. Raw 64-byte signature, SHA-256 pre-hash and the `signMessage` digest all reject with `-7212`. Found by dry-run of 9 combinations.
+- `set_agent_wallet_canonical_bytes` returns **162** bytes (its tool description says 122): prefix(26) + token u64 LE + owner(32) + new wallet(32) + 8 bytes (zero; looks like the wallet nonce) + deadline u64 LE + contract address(16) + genesis hash(32).
+- `CIS-8004.register` accepts `external_reference = Cis8 key` when that key is already bound to the sender through CIS-8; `agentByExternalReference` then returns the **full agent record** (with `token_id` as LE hex), not just an id.
+- MCP `agent_of` does **not** return `external_reference` (4th MCP gap). The verifier therefore reads the agent record over gRPC; `get_metadata` and `owner_of_key` are answered by MCP. Shown per check in the result (`source`).
+- Sponsored transaction summary (web-sdk 12): `cost` is the sender's share ("0") and `sponsor: { cost, sponsor }` holds what the sponsor paid.
+- Entry points without a return-value schema (e.g. `registerExternalKey`) make `deserializeReceiveReturnValue` throw; a successful dry-run is enough there.
+- Account-bound age claims work: `claimsBuilder().addAccountClaims(...)` + `createAccountClaims(network, credId, 0, ...)` + `{type:"account", issuer, values, randomness}` input. The presentation's `credentialSubject.id` is `did:ccd:testnet:cred:<credId>`, which `getAccountInfo(credId)` resolves to the issuer's account; the request context `ConnectionID` carries `mandate:<id>`. A relying party re-verifies with `VerificationAuditRecordV1.verifyAnchor` + `VerificationRequestV1.verifyAnchor` + `VerifiablePresentationV1.verifyWithNode`; nothing has to be trusted from us.
+- Range statements are `lower <= dob < upper` (upper exclusive): a proof made on 2026-11-19 has `upper = 20081120`.
+- x402 2.31.0: payment flow re-proven (`docs/EVIDENCE.md`). `onAfterVerify` gives `result.payer`, used to refuse payment from any wallet other than the agent's registered wallet.
+- Explorer links: `https://ccdexplorer.io/testnet/transaction/<hash>` and `/testnet/account/<address>` render server-side (checked with curl); CCDScan testnet links are client-rendered.
+
+### Tooling
+- npm drops rolldown's native binding on a second `npm i` with an existing lockfile (npm/cli#4828). Fixed by listing `@rolldown/binding-darwin-arm64` and `@rolldown/binding-linux-x64-gnu` (same version) in `optionalDependencies`.
+- Apps run as TypeScript directly on Node 24 (type stripping); `erasableSyntaxOnly` is on, so no parameter properties or enums anywhere.
+
+### Decisions
+- Revocation = overwrite the anchor with `revoked|at:<unix>` (one sponsored `setMetadata`). The agent NFT stays active for other mandates.
+- Verifier caches revocable state (anchor, agent record, key binding) for at most `revocationBoundMs` (site default 10 s); account keys 60 s; a verified adult proof is cached by (mandate id, record hash, VAA tx, issuer) because that evidence is immutable. Measured: the revoked mandate was rejected 2.7 s after the revoke finalized.
+- The agent NFT names its signing key (external_reference), CIS-8 binds the key to the human, and the mandate names both. The verifier checks all three agree.
+- Paid routes: mandate check runs before x402, so an unauthorised or over-cap agent never receives a 402; spend is added to the ledger only after settlement.
+- Known limits (to state in README): replay store and spend ledger are in memory (single process); concurrent paid requests can overshoot `maxTotal` by in-flight amounts (production: reserve at verify time); receipts are submitted without waiting for finalization.
+- Recording content of workshops 3, 5 and 6 is unverified (Encode login needed); nothing from the recordings is cited.

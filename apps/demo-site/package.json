@@ -1,1 +1,13 @@
-{ "name": "@mandate/demo-site", "version": "0.0.0", "private": true, "type": "module", "license": "Apache-2.0" }
+{
+  "name": "@mandate/demo-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Demo relying party: free routes gated by Mandate instead of a CAPTCHA, a paid route via x402 (CCD), on-chain receipts.",
+  "scripts": { "start": "node src/main.ts" },
+  "dependencies": {
+    "@mandate/chain": "0.1.0", "@mandate/core": "0.1.0", "@mandate/node": "0.1.0", "@mandate/verifier": "0.1.0",
+    "@x402/concordium": "2.31.0", "@x402/core": "2.31.0", "@x402/express": "2.31.0", "express": "5.3.0"
+  }
+}

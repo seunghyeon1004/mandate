@@ -5,7 +5,7 @@ import { CCD_TESTNET, randomNonce, toHex, type Mandate } from "../src/index.js";
 
 export async function fakeHuman() {
   const { secretKey, publicKey } = await ed.keygenAsync();
-  const addr = AccountAddress.fromBuffer(crypto.getRandomValues(new Uint8Array(32)));
+  const addr = AccountAddress.fromBuffer(crypto.getRandomValues(new Uint8Array(32)).buffer);
   const info = {
     accountAddress: addr,
     accountThreshold: 1,

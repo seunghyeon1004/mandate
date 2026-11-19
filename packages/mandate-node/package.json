@@ -1,0 +1,12 @@
+{
+  "name": "@mandate/node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Node-only helpers for the demo apps: local config, testnet key derivation from seed files under ../.secrets, state directory. Never prints secrets.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "dependencies": { "@concordium/web-sdk": "12.0.2", "@grpc/grpc-js": "1.14.7", "@mandate/chain": "0.1.0", "@mandate/core": "0.1.0", "@noble/ed25519": "3.2.0" }
+}

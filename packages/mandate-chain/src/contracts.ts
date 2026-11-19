@@ -76,8 +76,10 @@ export function receiveName(h: ContractHandle, entrypoint: string): ReceiveName.
 }
 
 export class ContractRejected extends Error {
-  constructor(readonly reason: unknown) {
+  readonly reason: unknown;
+  constructor(reason: unknown) {
     super(`contract rejected: ${JSON.stringify(reason, (_k, v) => (typeof v === "bigint" ? String(v) : v)).slice(0, 300)}`);
+    this.reason = reason;
   }
 }
 
@@ -91,8 +93,18 @@ export async function invoke(client: ConcordiumGRPCClient, h: ContractHandle, en
     energy: Energy.create(100_000n),
   });
   if (r.tag !== "success") throw new ContractRejected(r.reason);
-  if (!r.returnValue) return undefined;
-  return deserializeReceiveReturnValue(toArrayBuffer(r.returnValue.buffer), h.schema, ContractName.fromString(h.name), EntrypointName.fromString(entrypoint));
+  if (!r.returnValue || r.returnValue.buffer.length === 0) return undefined;
+  try {
+    return decodeReturn(h, entrypoint, r.returnValue.buffer);
+  } catch (e) {
+    // State-changing entry points (e.g. registerExternalKey) declare no return value schema; a successful dry-run is all we need.
+    if (/no return value schema/i.test(String((e as Error).message))) return undefined;
+    throw e;
+  }
+}
+
+function decodeReturn(h: ContractHandle, entrypoint: string, buf: Uint8Array): unknown {
+  return deserializeReceiveReturnValue(toArrayBuffer(buf), h.schema, ContractName.fromString(h.name), EntrypointName.fromString(entrypoint));
 }
 
 /** CIS-8004 token ids on the wire: lowercase hex of the u64 little-endian bytes. */

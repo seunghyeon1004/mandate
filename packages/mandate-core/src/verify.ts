@@ -134,8 +134,14 @@ export interface VerifyDeps {
 const ORDER: CheckName[] = ["headers", "mandate_format", "network", "request_signature", "freshness", "replay", "validity_window", "scope_action", "scope_domain", "spend_cap", "human_signature", "on_chain_anchor", "agent_registry", "key_binding", "adult_proof"];
 
 class Fail extends Error {
-  constructor(readonly code: RejectionCode, readonly why: string, readonly source: Source = "local") {
+  readonly code: RejectionCode;
+  readonly why: string;
+  readonly source: Source;
+  constructor(code: RejectionCode, why: string, source: Source = "local") {
     super(why);
+    this.code = code;
+    this.why = why;
+    this.source = source;
   }
 }
 

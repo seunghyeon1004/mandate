@@ -1,6 +1,6 @@
 // Transaction helpers: plain and protocol-level (V1) sponsored contract updates, and registerData receipts.
 import {
-  AccountAddress, CcdAmount, ContractAddress, DataBlob, Energy, ReceiveName, Parameter, TransactionExpiry,
+  AccountAddress, CcdAmount, ContractAddress, DataBlob, Energy, ReceiveName, Parameter, TransactionExpiry, TransactionHash,
   type AccountSigner, type ConcordiumGRPCClient,
 } from "@concordium/web-sdk";
 import { Transaction } from "@concordium/web-sdk/transactions";
@@ -33,6 +33,7 @@ export interface TxOutcome {
   cost?: string;
   /** Account that paid the fee (sponsor when sponsored). */
   feePayer?: string;
+  sponsored?: boolean;
   blockHash?: string;
 }
 
@@ -40,16 +41,27 @@ const j = (x: unknown) => JSON.stringify(x, (_k, v) => (typeof v === "bigint" ? 
 
 async function submit(client: ConcordiumGRPCClient, signed: Transaction.Signable): Promise<TxOutcome> {
   const hash = await client.sendTransaction(Transaction.finalize(signed));
+  return txOutcome(client, hash.toString());
+}
+
+/** Wait for (or look up) a transaction and summarise it: ok/rejected, fee, who paid the fee. */
+export async function txOutcome(client: ConcordiumGRPCClient, hashHex: string): Promise<TxOutcome> {
+  const hash = TransactionHash.fromHexString(hashHex);
   const out = await client.waitForTransactionFinalization(hash, 120_000);
-  const s = out.summary as unknown as { type?: string; transactionType?: string; rejectReason?: unknown; cost?: { microCcdAmount?: bigint } | bigint; sponsorDetails?: unknown; sender?: { address?: string }; sponsor?: { address?: string } };
-  const failed = s.transactionType === "failed" || (s as { type?: string }).type === "failed" || !!s.rejectReason;
-  const cost = typeof s.cost === "bigint" ? String(s.cost) : s.cost?.microCcdAmount !== undefined ? String(s.cost.microCcdAmount) : undefined;
+  // Summary shape (web-sdk 12): { cost, sender, sponsor?: { cost, sponsor }, transactionType, rejectReason? }. For a sponsored
+  // transaction `cost` is the sender's share (0) and `sponsor.cost` is what the sponsor paid.
+  const s = out.summary as unknown as { transactionType?: string; rejectReason?: unknown; cost?: unknown; sender?: { address?: string }; sponsor?: { cost?: unknown; sponsor?: { address?: string } | string } };
+  const failed = s.transactionType === "failed" || !!s.rejectReason;
+  const amt = (c: unknown): string | undefined => (c === undefined || c === null ? undefined : typeof c === "object" && "microCcdAmount" in (c as object) ? String((c as { microCcdAmount: bigint }).microCcdAmount) : String(c));
+  const sponsorAddr = typeof s.sponsor?.sponsor === "string" ? s.sponsor.sponsor : s.sponsor?.sponsor?.address;
+  const cost = s.sponsor ? amt(s.sponsor.cost) : amt(s.cost);
   return {
     hash: hash.toString(),
     ok: !failed,
     ...(failed ? { rejectReason: j(s.rejectReason).slice(0, 300) } : {}),
     ...(cost !== undefined ? { cost } : {}),
-    feePayer: s.sponsor?.address ?? s.sender?.address,
+    feePayer: sponsorAddr ?? s.sender?.address,
+    ...(sponsorAddr ? { sponsored: true } : { sponsored: false }),
     blockHash: out.blockHash.toString(),
   };
 }

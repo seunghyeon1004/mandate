@@ -45,7 +45,10 @@ export class ConcordiumChainView implements ChainView {
   readonly stats: SourceStats = { mcp: 0, grpc: 0, cache: 0, fallbacks: 0 };
   readonly revocationBoundMs: number;
 
-  constructor(private readonly o: ChainViewOptions) {
+  private readonly o: ChainViewOptions;
+
+  constructor(o: ChainViewOptions) {
+    this.o = o;
     this.revocationBoundMs = o.revocationBoundMs ?? 10_000;
   }
 

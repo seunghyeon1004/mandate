@@ -1,1 +1,13 @@
-{ "name": "@mandate/facilitator", "version": "0.0.0", "private": true, "type": "module", "license": "Apache-2.0" }
+{
+  "name": "@mandate/facilitator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Operator service: fee sponsor for Mandate contract calls (V1 sponsored transactions), self-hosted x402 facilitator for ccd:* networks, audit-record host.",
+  "scripts": { "start": "node src/main.ts" },
+  "dependencies": {
+    "@concordium/web-sdk": "12.0.2", "@mandate/chain": "0.1.0", "@mandate/core": "0.1.0", "@mandate/node": "0.1.0",
+    "@x402/concordium": "2.31.0", "@x402/core": "2.31.0", "express": "5.3.0"
+  }
+}

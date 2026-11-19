@@ -1,1 +1,12 @@
-{ "name": "@mandate/agent", "version": "0.0.0", "private": true, "type": "module", "license": "Apache-2.0" }
+{
+  "name": "@mandate/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Generic sign-up/browsing agent with a call_with_mandate tool: signs each request with its CIS-8-bound key and pays x402 invoices from its registered agent wallet.",
+  "dependencies": {
+    "@concordium/web-sdk": "12.0.2", "@mandate/core": "0.1.0", "@mandate/node": "0.1.0",
+    "@x402/concordium": "2.31.0", "@x402/core": "2.31.0", "@x402/fetch": "2.31.0"
+  }
+}

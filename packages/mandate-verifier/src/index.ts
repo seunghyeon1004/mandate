@@ -10,7 +10,10 @@ export type { VerifyResult, RejectionCode } from "@mandate/core";
 /** In-memory replay guard. Single process only: a multi-instance deployment needs a shared store (e.g. Redis SET NX PX). */
 export class MemoryReplayGuard implements ReplayGuard {
   private seen = new Map<string, number>();
-  constructor(private readonly maxEntries = 100_000) {}
+  private readonly maxEntries: number;
+  constructor(maxEntries = 100_000) {
+    this.maxEntries = maxEntries;
+  }
   async remember(key: string, expiresAtMs: number): Promise<boolean> {
     const now = Date.now();
     if (this.seen.size >= this.maxEntries) for (const [k, exp] of this.seen) if (exp < now) this.seen.delete(k);
@@ -79,8 +82,10 @@ export class MandateVerifier {
   readonly replay: ReplayGuard;
   readonly ledger: RecordingLedger;
   private pending = new Map<string, PendingPayment>();
+  private readonly o: MandateVerifierOptions;
 
-  constructor(private readonly o: MandateVerifierOptions) {
+  constructor(o: MandateVerifierOptions) {
+    this.o = o;
     this.replay = o.replay ?? new MemoryReplayGuard();
     this.ledger = o.ledger ?? new MemoryLedger();
   }

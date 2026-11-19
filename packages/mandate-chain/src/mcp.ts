@@ -14,7 +14,17 @@ export class McpClient {
   private id = 1;
   private initialising: Promise<void> | null = null;
 
-  constructor(readonly baseUrl: string, readonly network: "testnet" | "mainnet" | "devnet" = "testnet", readonly timeoutMs = 4000, private readonly fetchImpl: typeof fetch = globalThis.fetch.bind(globalThis)) {}
+  readonly baseUrl: string;
+  readonly network: "testnet" | "mainnet" | "devnet";
+  readonly timeoutMs: number;
+  private readonly fetchImpl: typeof fetch;
+
+  constructor(baseUrl: string, network: "testnet" | "mainnet" | "devnet" = "testnet", timeoutMs = 4000, fetchImpl: typeof fetch = globalThis.fetch.bind(globalThis)) {
+    this.baseUrl = baseUrl;
+    this.network = network;
+    this.timeoutMs = timeoutMs;
+    this.fetchImpl = fetchImpl;
+  }
 
   private async rpc(method: string, params?: unknown, notification = false): Promise<unknown> {
     const body: Record<string, unknown> = { jsonrpc: "2.0", method };

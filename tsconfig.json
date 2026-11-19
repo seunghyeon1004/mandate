@@ -1,1 +1,1 @@
-{ "files": [], "references": [{ "path": "packages/mandate-core" }, { "path": "packages/mandate-chain" }, { "path": "packages/mandate-verifier" }] }
+{"files":[],"references":[{"path":"packages/mandate-core"},{"path":"packages/mandate-chain"},{"path":"packages/mandate-verifier"},{"path":"packages/mandate-node"}]}

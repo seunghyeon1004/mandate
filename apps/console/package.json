@@ -1,1 +1,12 @@
-{ "name": "@mandate/console", "version": "0.0.0", "private": true, "type": "module", "license": "Apache-2.0" }
+{
+  "name": "@mandate/console",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Issuer console: register the agent, issue mandates with an age proof, revoke. CLI now; web UI at Gate 2.",
+  "bin": { "mandate": "src/cli.ts" },
+  "dependencies": {
+    "@concordium/web-sdk": "12.0.2", "@mandate/chain": "0.1.0", "@mandate/core": "0.1.0", "@mandate/node": "0.1.0", "@noble/ed25519": "3.2.0"
+  }
+}

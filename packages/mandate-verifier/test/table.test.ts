@@ -81,7 +81,7 @@ async function call(w: World, opts: { path?: string; method?: string; body?: str
   return { status: r.status, body: (await r.json()) as { error?: RejectionCode; ok?: boolean; checks?: Array<{ name: string; ok: boolean | null; source?: string }> }, headers };
 }
 
-type Row = [label: string, expected: RejectionCode | "ok", status: number, run: () => Promise<{ status: number; body: { error?: string } }>];
+type Row = [label: string, expected: RejectionCode | "ok", status: number, run: () => Promise<{ status: number; body: { error?: string; ok?: boolean } }>];
 
 const rows: Row[] = [
   ["happy path", "ok", 200, async () => call(await world())],
