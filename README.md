@@ -3,6 +3,7 @@
 A verified adult gives an AI agent a scoped, expiring, revocable mandate: what it may do, on which sites, until when, and for how much. A website checks the agent's signed request and the mandate against Concordium, and lets the agent through instead of showing a CAPTCHA; paid actions settle with x402 in CCD. Every accepted action leaves an on-chain receipt, and the human revokes with one transaction.
 
 - **Try it in the browser (live, testnet):** [verify the demo mandate](https://seunghyeon1004.github.io/mandate/verify/?m=demo-valid) or [a revoked one](https://seunghyeon1004.github.io/mandate/verify/?m=demo-revoked). Every check runs in your browser against Concordium testnet and names its source.
+- **Demo video (2:40):** https://youtu.be/S2mRf5xzETY
 - **Evidence of a full run** with CCDExplorer links: [docs/EVIDENCE.md](docs/EVIDENCE.md).
 - **Agent Card** (Verified by Concordium badge, plus our Mandate A2A extension): [agent-card.json](https://seunghyeon1004.github.io/mandate/agents/1261/agent-card.json); [hosted badge check](https://agent-registry-mcp.concordium.com/v1/check-badge/JyP9YMpKL9vhHC2hgA2pc?network=testnet).
 

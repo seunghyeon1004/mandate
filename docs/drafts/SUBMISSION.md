@@ -55,7 +55,7 @@ Full table with every step of the run: https://github.com/seunghyeon1004/mandate
 - Public verify page (live): https://seunghyeon1004.github.io/mandate/verify/?m=demo-valid and https://seunghyeon1004.github.io/mandate/verify/?m=demo-revoked
 - Landing page: https://seunghyeon1004.github.io/mandate/
 - Repository: https://github.com/seunghyeon1004/mandate (Apache-2.0); local demo: `node scripts/demo.mjs setup` then `node scripts/demo.mjs run`
-- Video: (to be added)
+- Video (2:40): https://youtu.be/S2mRf5xzETY
 
 ## Honesty notes
 
