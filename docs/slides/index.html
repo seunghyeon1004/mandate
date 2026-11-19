@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mandate - slides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../site/assets/tokens.css">
+<style>
+/* Slides for Mandate: 1280x720 pages, Cobalt tokens shared with the Pages site. Rendered to docs/SLIDES.pdf by scripts/slides.mjs. */
+@page { size: 1280px 720px; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+.slide { width: 1280px; height: 720px; padding: 56px 72px 48px; position: relative; overflow: hidden; break-after: page; display: grid; grid-template-rows: auto 1fr auto; gap: 28px; background: var(--color-paper); }
+.slide:last-child { break-after: auto; }
+.top { display: flex; justify-content: space-between; align-items: center; color: var(--color-muted); font-size: 15px; }
+.mark { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; font-size: 18px; color: var(--color-ink); letter-spacing: var(--tracking-display); }
+.mark svg { width: 18px; height: 18px; color: var(--color-accent); }
+.num { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: var(--tracking-display); margin: 0; line-height: 1.04; }
+h1 { font-size: 92px; }
+h2 { font-size: 46px; max-width: 24ch; }
+h3 { font-size: 22px; line-height: 1.2; }
+p { margin: 0; line-height: 1.45; }
+.lead { font-size: 26px; color: var(--color-ink-2); max-width: 40ch; }
+.foot { display: flex; justify-content: space-between; color: var(--color-muted); font-size: 14px; border-top: 1px solid var(--color-rule); padding-top: 12px; }
+.mono { font-family: var(--font-outlier); font-size: 0.86em; }
+a { color: var(--color-accent-deep); text-decoration: none; }
+.panel { border: 1px solid var(--color-rule); border-radius: 16px 4px 16px 4px; background: var(--color-paper); box-shadow: var(--shadow-card); }
+.shot { border: 1px solid var(--color-rule-2); border-radius: 8px; overflow: hidden; background: var(--color-paper-2); }
+.shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+.cap { font-size: 13px; color: var(--color-muted); margin-top: 6px; }
+ul.points { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+ul.points li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; font-size: 21px; line-height: 1.4; color: var(--color-ink-2); }
+ul.points li strong { color: var(--color-ink); font-weight: 500; }
+ul.points li::before { content: ""; width: 12px; height: 12px; margin-top: 9px; border: 2px solid var(--color-accent); border-radius: 2px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: start; }
+.cols-5-7 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: start; }
+
+/* title */
+.title { grid-template-rows: auto 1fr auto; }
+.title .body { display: grid; align-content: center; gap: 26px; }
+.title .tag { font-size: 34px; font-family: var(--font-display); font-weight: 500; color: var(--color-ink); letter-spacing: var(--tracking-display); }
+.links { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 20px; font-size: 18px; margin-top: 8px; }
+.links dt { color: var(--color-muted); font-family: var(--font-display); font-weight: 500; }
+.links dd { margin: 0; }
+
+/* trust chain */
+.chain { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; align-items: stretch; }
+.node { position: relative; padding: 18px 16px 16px; border: 1px solid var(--color-rule-2); border-radius: 12px 3px 12px 3px; background: var(--color-paper); margin-right: 30px; display: grid; gap: 8px; align-content: start; }
+.node:last-child { margin-right: 0; background: var(--color-graphite); border-color: var(--color-graphite); color: var(--color-graphite-ink); }
+.node:last-child .k, .node:last-child p { color: var(--color-graphite-muted); }
+.node:last-child h3 { color: var(--color-graphite-ink); }
+.node .k { font-size: 13px; color: var(--color-accent); font-family: var(--font-display); font-weight: 600; }
+.node p { font-size: 14.5px; color: var(--color-ink-2); line-height: 1.4; }
+.node:not(:last-child)::after { content: ""; position: absolute; right: -24px; top: 50%; width: 18px; height: 2px; background: var(--color-accent); }
+.node:not(:last-child)::before { content: ""; position: absolute; right: -25px; top: calc(50% - 5px); width: 8px; height: 8px; border-top: 2px solid var(--color-accent); border-right: 2px solid var(--color-accent); transform: rotate(45deg); }
+.checks15 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px 18px; font-size: 13.5px; color: var(--color-ink-2); counter-reset: c; }
+.checks15 span { counter-increment: c; }
+.checks15 span::before { content: counter(c) ". "; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+
+/* tables */
+table { width: 100%; border-collapse: collapse; font-size: 16px; }
+th { text-align: left; font-family: var(--font-display); font-weight: 500; color: var(--color-muted); font-size: 14px; padding: 8px 12px; border-bottom: 1px solid var(--color-rule-2); }
+td { padding: 8px 12px; border-bottom: 1px solid var(--color-rule); vertical-align: top; line-height: 1.35; color: var(--color-ink-2); }
+td:first-child { color: var(--color-ink); font-weight: 500; white-space: nowrap; }
+td .mono { color: var(--color-ink-2); }
+
+.figure { font-family: var(--font-display); font-weight: 600; font-size: 44px; letter-spacing: var(--tracking-display); color: var(--color-ink); line-height: 1; }
+.figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.figs div p { font-size: 14.5px; color: var(--color-muted); margin-top: 6px; }
+.txs { font-size: 14.5px; display: grid; gap: 6px; }
+.txs div { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 10px; }
+.txs span:first-child { color: var(--color-muted); }
+
+.honest { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.honest .panel { padding: 28px; display: grid; gap: 12px; align-content: start; }
+.honest p { font-size: 19px; color: var(--color-ink-2); }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide title">
+  <div class="top"><span class="mark"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.5 8.2l2.2 2.2 4.8-4.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>Mandate</span><span>Concordium Trusted Agents Hackathon</span></div>
+  <div class="body">
+    <h1>Mandate</h1>
+    <p class="tag">Let the agent through, not the bot farm.</p>
+    <p class="lead">A verified adult gives an AI agent a scoped, expiring, revocable mandate. Websites check it on Concordium instead of showing a CAPTCHA.</p>
+    <dl class="links">
+      <dt>Verify live</dt><dd><a href="https://seunghyeon1004.github.io/mandate/verify/">seunghyeon1004.github.io/mandate/verify</a></dd>
+      <dt>Code</dt><dd><a href="https://github.com/seunghyeon1004/mandate">github.com/seunghyeon1004/mandate</a></dd>
+      <dt>Video</dt><dd><a href="https://youtu.be/S2mRf5xzETY">youtu.be/S2mRf5xzETY</a></dd>
+    </dl>
+  </div>
+  <div class="foot"><span>Concordium testnet</span><span class="num">1 / 8</span></div>
+</section>
+
+<!-- 2. Problem -->
+<section class="slide">
+  <div class="top"><span class="mark">The problem</span><span></span></div>
+  <div class="cols-5-7">
+    <div style="display:grid; gap:28px">
+      <h2>Websites can’t tell a person’s agent from a bot farm</h2>
+      <ul class="points">
+        <li><span><strong>So they block both</strong> with CAPTCHAs and SMS checks, and agents acting for real people fail.</span></li>
+        <li><span><strong>No accountable human:</strong> a site cannot see who stands behind an agent, or what it was allowed to do.</span></li>
+        <li><span><strong>No way back:</strong> once an agent holds a password or a card, the person cannot cleanly take the permission back.</span></li>
+      </ul>
+    </div>
+    <div>
+      <div class="shot" style="height:470px"><img src="../video/captures/shot-1.png" alt="Demo website sign-up with a puzzle placeholder where a CAPTCHA normally sits"></div>
+      <p class="cap">The fictional demo site Larchfield Reports: people get a puzzle (a placeholder here), agents with a mandate skip it.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Mandate</span><span class="num">2 / 8</span></div>
+</section>
+
+<!-- 3. How it works -->
+<section class="slide">
+  <div class="top"><span class="mark">How it works</span><span></span></div>
+  <div style="display:grid; gap:34px; align-content:start">
+    <h2>A chain of trust a website checks on its own</h2>
+    <div class="chain">
+      <div class="node"><span class="k">1 Human</span><h3>Concordium ID, ZK age proof</h3><p>Proves 18 or older, bound to their account, for this mandate. No birth date revealed. VRA and VAA anchored.</p></div>
+      <div class="node"><span class="k">2 Agent NFT</span><h3>CIS-8004 Agent Registry</h3><p>Owned by the human; names the agent’s signing key; Agent Card with the Verified by Concordium badge.</p></div>
+      <div class="node"><span class="k">3 Key binding</span><h3>CIS-8</h3><p>The agent’s ed25519 key is bound to the human’s account. The agent never holds the human’s key.</p></div>
+      <div class="node"><span class="k">4 Mandate</span><h3>Signed and anchored</h3><p>Actions, sites, expiry, spend caps, signed by the human; its hash sits in the agent’s on-chain metadata. Revoke = one transaction.</p></div>
+      <div class="node"><span class="k">5 Website</span><h3>15 checks per request</h3><p>Drop-in Express middleware; x402 payments only from the agent’s registered wallet, within the caps.</p></div>
+    </div>
+    <div class="panel" style="padding:18px 22px">
+      <div class="checks15">
+        <span>Headers</span><span>Well-formed</span><span>Testnet registry</span><span>Agent’s request signature</span><span>Fresh (60 s)</span>
+        <span>Not a replay</span><span>Validity window</span><span>Action in scope</span><span>Site in scope</span><span>Spend caps</span>
+        <span>Human’s signature</span><span>Anchored, not revoked</span><span>Agent NFT and key</span><span>CIS-8 binding</span><span>Age proof</span>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Each check reports its source: this site, the testnet node, or the Agent Registry MCP. Network failure fails closed.</span><span class="num">3 / 8</span></div>
+</section>
+
+<!-- 4. Components -->
+<section class="slide">
+  <div class="top"><span class="mark">Concordium components</span><span></span></div>
+  <div style="display:grid; gap:22px; align-content:start">
+    <h2 style="max-width:none; font-size:42px">Eight Concordium pieces, each doing real work</h2>
+    <table>
+      <thead><tr><th>Component</th><th>Used for</th><th>Where in the code</th></tr></thead>
+      <tbody>
+        <tr><td>Concordium ID, Verify &amp; Access</td><td>Account-bound ZK age proof per mandate; any site re-verifies it</td><td><span class="mono">apps/console/src/issuer.ts, mandate-chain/src/adult.ts</span></td></tr>
+        <tr><td>Agent Registry (CIS-8004)</td><td>Agent NFT naming its key; mandate anchor; revocation</td><td><span class="mono">apps/console/src/issuer.ts, mandate-chain/src/reads.ts</span></td></tr>
+        <tr><td>CIS-8 external keys</td><td>Agent key bound to the human’s account</td><td><span class="mono">apps/console/src/issuer.ts</span></td></tr>
+        <tr><td>Agent Card and badge</td><td>Card on GitHub Pages, hash pinned; hosted badge check valid</td><td><span class="mono">apps/console/src/issuer.ts</span></td></tr>
+        <tr><td>Agent Registry MCP</td><td>Reads, builders, badge check, with gRPC fallback</td><td><span class="mono">mandate-chain/src/mcp.ts, view.ts</span></td></tr>
+        <tr><td>x402 in CCD</td><td>Payments from the registered agent wallet; own facilitator</td><td><span class="mono">apps/demo-site, apps/facilitator, mandate-verifier</span></td></tr>
+        <tr><td>Sponsored transactions</td><td>The human pays no fees; x402 fees sponsored</td><td><span class="mono">mandate-chain/src/tx.ts, facilitator/src/policy.ts</span></td></tr>
+        <tr><td>registerData</td><td>One receipt per accepted action</td><td><span class="mono">apps/demo-site/src/receipts.ts</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="foot"><span>Web SDK over gRPC (services) and gRPC-web (the public verify page, ZK verified in the browser)</span><span class="num">4 / 8</span></div>
+</section>
+
+<!-- 5. Evidence -->
+<section class="slide">
+  <div class="top"><span class="mark">It works, on testnet</span><span></span></div>
+  <div class="cols" style="gap:32px">
+    <div style="display:grid; gap:10px">
+      <div class="shot" style="height:250px; position:relative"><img class="crop" src="../video/captures/shot-6.png" alt="Demo site feed: agent bought a report for 0.05 CCD, a 0.08 CCD purchase refused over the cap, a request refused after revocation" style="position:absolute; width:1120px; max-width:none; height:auto; left:-482px; top:-196px; object-fit:fill"></div>
+      <p class="cap">Demo site feed, newest first: refused after the revoke, and a 0.08 CCD purchase refused over the 0.05 CCD cap.</p>
+      <div class="shot" style="height:130px; position:relative"><img src="../video/captures/shot-7.png" alt="Public verify page showing the revoked demo mandate" style="position:absolute; width:668px; max-width:none; height:auto; left:-54px; top:-150px; object-fit:fill"></div>
+      <p class="cap">Public verify page, revoked demo mandate, checked live in the browser.</p>
+    </div>
+    <div style="display:grid; gap:26px; align-content:start">
+      <div class="figs">
+        <div><span class="figure num">15</span><p>steps in one integration run, all passing</p></div>
+        <div><span class="figure num">2.7 s</span><p>from revoke finalized to the site refusing</p></div>
+        <div><span class="figure num">0 CCD</span><p>held by the human: every fee sponsored</p></div>
+      </div>
+      <div class="txs">
+        <div><span>Agent registered (token 1261)</span><a class="mono" href="https://ccdexplorer.io/testnet/transaction/47e647d26a404eefc9b052bb9a256560d3e228a7a48a125158973169dc3c2336">47e647d26a…</a></div>
+        <div><span>Mandate anchored</span><a class="mono" href="https://ccdexplorer.io/testnet/transaction/1dddca8b87c28ab29b6bb327f26505bb67ed803cd4c49cb09c3d9392680ad311">1dddca8b87…</a></div>
+        <div><span>x402 payment, 0.05 CCD</span><a class="mono" href="https://ccdexplorer.io/testnet/transaction/0c0943cb6292cf95a46fe3291054cc9409e55a9906c066a802013e9ea25c826a">0c0943cb62…</a></div>
+        <div><span>Revocation</span><a class="mono" href="https://ccdexplorer.io/testnet/transaction/d81ed5e6b4c94086eaaf173eff58e54a74edbad59a9e5fb7c441b0888091193f">d81ed5e6b4…</a></div>
+      </div>
+      <p style="font-size:15px; color: var(--color-muted)">All links open on CCDExplorer (testnet). Every step of the run, with its transaction: docs/EVIDENCE.md in the repository.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Verified by Concordium badge for token 1261: valid, no issues</span><span class="num">5 / 8</span></div>
+</section>
+
+<!-- 6. Path to production -->
+<section class="slide">
+  <div class="top"><span class="mark">Path to production</span><span></span></div>
+  <div class="cols" style="gap:48px">
+    <div style="display:grid; gap:28px">
+      <h2>From testnet to real users</h2>
+      <ul class="points">
+        <li><span><strong>Same registry code on mainnet.</strong> CIS-8004 &lt;10082,0&gt; and CIS-8 &lt;10081,0&gt; run the same modules as testnet; schemas load at runtime with a start-up check.</span></li>
+        <li><span><strong>Real wallets.</strong> The Concordium ID app and wallet sign mandates and answer the age proof; the console holds no keys.</span></li>
+        <li><span><strong>Businesses</strong> issue mandates for their agents under an LEI company identity.</span></li>
+      </ul>
+    </div>
+    <ul class="points" style="padding-top:8px">
+      <li><span><strong>One middleware for websites,</strong> with a shared replay store and a database spend ledger (atomic reservations).</span></li>
+      <li><span><strong>Own node first,</strong> the hosted MCP as a convenience; each site states its revocation bound.</span></li>
+      <li><span><strong>Fees sponsored</strong> with per-issuer quotas; prices in a stable Protocol-Level Token so caps keep their meaning.</span></li>
+      <li><span><strong>Pilot:</strong> one site that gates sign-ups today, one agent framework carrying the Mandate A2A extension.</span></li>
+    </ul>
+  </div>
+  <div class="foot"><span>Full note: docs/PATH_TO_PRODUCTION.md</span><span class="num">6 / 8</span></div>
+</section>
+
+<!-- 7. Honesty -->
+<section class="slide">
+  <div class="top"><span class="mark">Honesty and limits</span><span></span></div>
+  <div style="display:grid; gap:30px; align-content:start">
+    <h2>What this demo does not prove</h2>
+    <div class="honest">
+      <div class="panel"><h3>Testnet identity</h3><p>Identities come from Concordium’s self-service testnet identity provider with invented attributes (“Test Human”, born 1990-01-01). “Verified adult” proves the mechanism, not a real person.</p></div>
+      <div class="panel"><h3>Local test wallet</h3><p>The human’s signature is made by a local test wallet. The Concordium browser and mobile wallet <span class="mono">signMessage</span> flow gives the same signature type but was not exercised.</p></div>
+      <div class="panel"><h3>Caps are off chain</h3><p>Each website’s verifier enforces the spend caps; the chain holds the anchor, the proof, the receipts and the payments as evidence. Protocol-Level Locks are not live and are not used.</p></div>
+    </div>
+    <p style="font-size:19px; color: var(--color-ink-2); max-width: 80ch">Also: the demo’s replay store and spend ledger live in memory (one process). Before 19 November there were design notes and throwaway spikes, not in the repository. Built with an AI coding agent (Claude) under a human lead.</p>
+  </div>
+  <div class="foot"><span>Every number in these slides comes from docs/EVIDENCE.md or docs/video/RUN.md</span><span class="num">7 / 8</span></div>
+</section>
+
+<!-- 8. Links -->
+<section class="slide title">
+  <div class="top"><span class="mark"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.5 8.2l2.2 2.2 4.8-4.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>Mandate</span><span></span></div>
+  <div class="body">
+    <h2>Try it yourself</h2>
+    <dl class="links" style="font-size:22px; gap:14px 28px">
+      <dt>Verify a mandate</dt><dd><a href="https://seunghyeon1004.github.io/mandate/verify/?m=demo-valid">seunghyeon1004.github.io/mandate/verify/?m=demo-valid</a></dd>
+      <dt>A revoked one</dt><dd><a href="https://seunghyeon1004.github.io/mandate/verify/?m=demo-revoked">seunghyeon1004.github.io/mandate/verify/?m=demo-revoked</a></dd>
+      <dt>Code and evidence</dt><dd><a href="https://github.com/seunghyeon1004/mandate">github.com/seunghyeon1004/mandate</a></dd>
+      <dt>Demo video</dt><dd><a href="https://youtu.be/S2mRf5xzETY">youtu.be/S2mRf5xzETY</a></dd>
+      <dt>Agent Card</dt><dd><a href="https://seunghyeon1004.github.io/mandate/agents/1261/agent-card.json">seunghyeon1004.github.io/mandate/agents/1261/agent-card.json</a></dd>
+      <dt>Run it locally</dt><dd><span class="mono">node scripts/demo.mjs setup</span> then <span class="mono">node scripts/demo.mjs run</span></dd>
+    </dl>
+  </div>
+  <div class="foot"><span>Apache-2.0. Concordium testnet.</span><span class="num">8 / 8</span></div>
+</section>
+
+</body>
+</html>

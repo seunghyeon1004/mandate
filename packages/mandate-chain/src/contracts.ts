@@ -36,11 +36,28 @@ export interface ContractHandle {
 }
 
 /** Loads the contract's CURRENT module schema from chain (contracts can be upgraded in place; never hard-code a module ref). */
-export async function loadContract(client: ConcordiumGRPCClient, index: bigint, subindex: bigint, expectedName: string, required: readonly string[]): Promise<ContractHandle> {
+/** Node or proxy hiccups worth retrying (seen on testnet: "Received HTTP status code 502" at start-up). */
+export function isTransientNodeError(e: unknown): boolean {
+  return /HTTP status code 50[234]|\bUNAVAILABLE\b|ECONNRESET|ETIMEDOUT|DEADLINE_EXCEEDED/i.test(String((e as Error)?.message ?? e));
+}
+
+/** Retry `fn` on transient node errors only, waiting delaysMs[i] before retry i+1 (default: 2 retries, 500 ms then 1500 ms). */
+export async function withNodeRetry<T>(fn: () => Promise<T>, delaysMs: readonly number[] = [500, 1500]): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i >= delaysMs.length || !isTransientNodeError(e)) throw e;
+      await new Promise((r) => setTimeout(r, delaysMs[i]));
+    }
+  }
+}
+
+export async function loadContract(client: ConcordiumGRPCClient, index: bigint, subindex: bigint, expectedName: string, required: readonly string[], retryDelaysMs?: readonly number[]): Promise<ContractHandle> {
   const address = ContractAddress.create(index, subindex);
   let info;
   try {
-    info = await client.getInstanceInfo(address);
+    info = await withNodeRetry(() => client.getInstanceInfo(address), retryDelaysMs);
   } catch (e) {
     throw new RegistryStartupError(`contract <${index},${subindex}> not readable: ${(e as Error).message}`);
   }
@@ -49,7 +66,12 @@ export async function loadContract(client: ConcordiumGRPCClient, index: bigint, 
   const entrypoints = info.methods.map((m) => m.value.slice(name.length + 1));
   const missing = required.filter((e) => !entrypoints.includes(e));
   if (missing.length) throw new RegistryStartupError(`contract ${name} <${index},${subindex}> (module ${info.sourceModule.moduleRef}) is missing entry points: ${missing.join(", ")}. The registry was changed; Mandate must be updated before use.`);
-  const schema = await client.getEmbeddedSchema(info.sourceModule);
+  let schema;
+  try {
+    schema = await withNodeRetry(() => client.getEmbeddedSchema(info.sourceModule), retryDelaysMs);
+  } catch (e) {
+    throw new RegistryStartupError(`contract ${name} module ${info.sourceModule.moduleRef} schema not readable: ${(e as Error).message}`);
+  }
   if (!schema) throw new RegistryStartupError(`contract ${name} module ${info.sourceModule.moduleRef} has no embedded schema`);
   return { address, name, moduleRef: info.sourceModule.moduleRef, schema: toArrayBuffer(schema.buffer), entrypoints };
 }
