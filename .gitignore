@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.export
+*seed*
+*.key
+*.pem
+.secrets/
+test-results/
+playwright-report/
+evidence-local/
+.DS_Store
+*.tsbuildinfo

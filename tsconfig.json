@@ -1,0 +1,1 @@
+{ "files": [], "references": [{ "path": "packages/mandate-core" }, { "path": "packages/mandate-verifier" }] }
