@@ -17,8 +17,24 @@
     "test:web": "playwright test"
   },
   "devDependencies": {
+    "@types/express": "5.0.6",
     "@types/node": "^24.19.2",
+    "fast-check": "4.10.3",
+    "playwright": "1.65.1",
     "typescript": "^7.0.2",
     "vitest": "^5.1.1"
+  },
+  "dependencies": {
+    "@concordium/web-sdk": "12.0.2",
+    "@grpc/grpc-js": "1.14.7",
+    "@noble/ed25519": "3.2.0",
+    "@noble/hashes": "2.4.0",
+    "@scure/bip39": "2.4.0",
+    "@x402/concordium": "2.31.0",
+    "@x402/core": "2.31.0",
+    "@x402/express": "2.31.0",
+    "@x402/fetch": "2.31.0",
+    "canonicalize": "5.1.0",
+    "express": "5.3.0"
   }
 }
