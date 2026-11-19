@@ -16,6 +16,16 @@ const LABEL = {
   agent_registry: "Agent NFT active and owned by the issuer", key_binding: "Agent key bound to the issuer (CIS-8)", adult_proof: "Issuer proved age 18+ (zero knowledge)",
 };
 const SOURCE = { local: "This site", grpc: "Testnet node", mcp: "Agent Registry MCP", cache: "Cache (≤ 10 s)", indexer: "Indexer" };
+const TRIED = { signup: "tried to sign up", post_comment: "tried to post a comment", buy_report: "tried to buy", delete_account: "tried to delete an account" };
+const utc = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" }) + " UTC";
+/** Plain-language reason: CCD instead of micro-CCD, readable times. The raw reason stays in the expanded checks. */
+function friendly(code, reason) {
+  let m;
+  if (code === "revoked" && (m = /at (\d{4}-\d\d-\d\dT[\d:.]+Z)/.exec(reason ?? ""))) return `Revoked by its issuer on chain at ${utc(m[1])}`;
+  if ((m = /price (\d+) exceeds per-action cap (\d+)/.exec(reason ?? ""))) return `${ccd(m[1])} is above the ${ccd(m[2])} per-action cap; nothing was paid`;
+  if ((m = /total cap (\d+)/.exec(reason ?? ""))) return `This would pass the ${ccd(m[1])} total cap; nothing was paid`;
+  return reason ?? "";
+}
 const ACTION = { signup: "signed up", post_comment: "posted a comment", buy_report: "bought a report", delete_account: "tried to delete an account" };
 const REASON = {
   revoked: "Rejected: mandate revoked", expired: "Rejected: mandate expired", action_out_of_scope: "Rejected: action not in the mandate", domain_out_of_scope: "Rejected: site not in the mandate",
@@ -33,10 +43,10 @@ const open = new Set();
 function entry(a) {
   const ok = a.result.ok;
   const who = a.tokenId ? `Agent ${esc(a.tokenId)}` : "An agent";
-  const title = ok ? `${who} ${ACTION[a.action] ?? esc(a.action)}${a.price ? ` for ${ccd(a.price)}` : ""}` : `${who}: ${esc(a.action)}${a.price ? ` (${ccd(a.price)})` : ""}`;
+  const title = ok ? `${who} ${ACTION[a.action] ?? esc(a.action)}${a.price ? ` for ${ccd(a.price)}` : ""}` : `${who} ${TRIED[a.action] ?? esc(a.action)}${a.price ? ` for ${ccd(a.price)}` : ""}`;
   const verdict = ok ? `<span class="status status--pass">${ICON.pass}Accepted, no puzzle</span>` : `<span class="status status--fail">${ICON.fail}${esc(REASON[a.result.code] ?? "Rejected")}</span>`;
   const bits = [];
-  if (!ok && a.result.reason) bits.push(esc(a.result.reason));
+  if (!ok && a.result.reason) bits.push(esc(friendly(a.result.code, a.result.reason)));
   if (a.receipt) bits.push(`receipt ${tx(a.receipt.tx)} ${a.receipt.status === "finalized" ? "finalized" : a.receipt.status === "failed" ? "failed" : "submitted, waiting for finality"}`);
   if (a.payment) bits.push(`paid ${ccd(a.payment.amount)} in ${tx(a.payment.tx)}`);
   if (a.mandateId) bits.push(`mandate <span class="hash">${esc(a.mandateId.slice(0, 8))}…</span>`);

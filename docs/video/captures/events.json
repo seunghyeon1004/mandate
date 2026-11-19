@@ -1,0 +1,131 @@
+{
+  "size": {
+    "width": 1920,
+    "height": 1080
+  },
+  "zoom": 1.5,
+  "mandate": "84273576-5c1a-45c1-9bca-4605c36972ed",
+  "shots": {
+    "shot-1": [
+      {
+        "t": 1.898,
+        "kind": "zoom",
+        "x": 484,
+        "y": 851,
+        "label": "puzzle placeholder"
+      }
+    ],
+    "shot-2": [
+      {
+        "t": 4.687,
+        "kind": "zoom",
+        "x": 1551,
+        "y": 471,
+        "label": "badge valid"
+      }
+    ],
+    "shot-3": [
+      {
+        "t": 1.941,
+        "kind": "click",
+        "x": 309,
+        "y": 1143,
+        "label": "Prove age and issue"
+      },
+      {
+        "t": 24.426,
+        "kind": "zoom",
+        "x": 960,
+        "y": 280,
+        "label": "new mandate, Active"
+      }
+    ],
+    "shot-4": [
+      {
+        "t": 12.813,
+        "kind": "click",
+        "x": 1306,
+        "y": 576,
+        "label": "All 15 checks passed"
+      },
+      {
+        "t": 17.847,
+        "kind": "zoom",
+        "x": 1361,
+        "y": 521,
+        "label": "receipt finalized"
+      }
+    ],
+    "shot-5": [
+      {
+        "t": 14.168,
+        "kind": "zoom",
+        "x": 1361,
+        "y": 537,
+        "label": "paid 0.05 CCD"
+      },
+      {
+        "t": 20.495,
+        "kind": "zoom",
+        "x": 1503,
+        "y": 478,
+        "label": "refused above the cap"
+      }
+    ],
+    "shot-6": [
+      {
+        "t": 2.081,
+        "kind": "click",
+        "x": 1558,
+        "y": 594,
+        "label": "Revoke"
+      },
+      {
+        "t": 2.862,
+        "kind": "click",
+        "x": 1391,
+        "y": 664,
+        "label": "Revoke now"
+      },
+      {
+        "t": 16.963,
+        "kind": "zoom",
+        "x": 1570,
+        "y": 478,
+        "label": "Rejected: mandate revoked"
+      }
+    ],
+    "shot-7": [
+      {
+        "t": 7.769,
+        "kind": "zoom",
+        "x": 960,
+        "y": 495,
+        "label": "Valid"
+      },
+      {
+        "t": 10.303,
+        "kind": "zoom",
+        "x": 963,
+        "y": 154,
+        "label": "Answered by"
+      },
+      {
+        "t": 18.884,
+        "kind": "zoom",
+        "x": 960,
+        "y": 495,
+        "label": "Revoked"
+      }
+    ],
+    "shot-8": [
+      {
+        "t": 2.174,
+        "kind": "zoom",
+        "x": 295,
+        "y": 360,
+        "label": "Verify the demo mandate"
+      }
+    ]
+  }
+}

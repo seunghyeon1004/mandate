@@ -61,7 +61,8 @@ describe("Mandate end to end on Concordium testnet", () => {
   }, 60_000);
 
   test("issue: account-bound age proof (VRA, VAA) and sponsored anchor", async () => {
-    const r = await issueMandate(ctx, sponsorClient(), agentState, { actions: ["signup", "post_comment", "buy_report"], domains: ["localhost"], ttlSeconds: 3600, maxPerAction: "50000", maxTotal: "120000" }, () => {});
+    const r = await issueMandate(ctx, sponsorClient(), agentState, { actions: ["signup", "post_comment", "buy_report"], domains: ["localhost"], ttlSeconds: 3600, maxPerAction: "50000", maxTotal: "120000" }, () => {})
+      .catch((e: Error) => { steps.push({ step: "Issue mandate", result: "ERROR", detail: e.message.slice(0, 300) }); throw e; });
     signed = r.signed;
     issuedTxs = r.txs;
     const k = await agentKey();

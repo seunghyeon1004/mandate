@@ -36,7 +36,7 @@ Node 24. Everything binds to 127.0.0.1. Secrets go to `../.secrets` (testnet onl
 
 ```sh
 git clone https://github.com/seunghyeon1004/mandate && cd mandate && npm ci
-node scripts/demo.mjs setup   # ~3 min: two new testnet identities (invented attributes, self-service testnet IdP filled
+node scripts/demo.mjs setup   # ~6 min (measured 5:59): two new testnet identities (invented attributes, self-service testnet IdP filled
                               # in Playwright's bundled Chromium), four accounts, three faucet drops, agent registration, a first mandate
 node scripts/demo.mjs run     # operator service, demo site http://localhost:4021, console http://127.0.0.1:4020, scripted agent
 ```

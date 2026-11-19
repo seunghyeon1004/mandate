@@ -166,11 +166,11 @@ async function run(sm: SignedMandate) {
   $("elapsed").textContent = `${passed} of ${order.length} passed${unknown ? `, ${unknown} could not be checked` : ""} in ${((performance.now() - t0) / 1000).toFixed(1)} s, live from testnet.`;
   const realFail = result.checks.find((c) => c.ok === false && !transient(c));
   if (result.ok) {
-    setVerdict("pass", "Valid", "A website would accept this agent's signed requests within the scope above, instead of showing a CAPTCHA.");
+    setVerdict("pass", "Valid", "A website would accept this agent’s signed requests within the scope above, instead of showing a CAPTCHA.");
     $("verdict-hint").hidden = false;
   } else if (realFail?.code === "revoked") {
     const at = /^revoked\|at:(\d+)$/.exec(String(view.seen.anchor ?? ""))?.[1];
-    setVerdict("fail", "Revoked", `The issuer revoked this mandate on chain${at ? ` on ${fmtDate(Number(at))}` : ""}. Websites now reject the agent's requests; the demo site notices within its 10-second cache bound.`);
+    setVerdict("fail", "Revoked", `The issuer revoked this mandate on chain${at ? ` on ${fmtDate(Number(at))}` : ""}. Websites now reject the agent’s requests; the demo site notices within its 10-second cache bound.`);
   } else if (realFail) setVerdict("fail", WORD[realFail.code!] ?? "Rejected", realFail.reason ?? "");
   else setVerdict("wait", "Could not check", "Every check that ran passed, but part of testnet did not answer after 3 attempts. This says nothing against the mandate; reload in a minute.");
   $("result").setAttribute("aria-busy", "false");
