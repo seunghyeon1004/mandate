@@ -27,16 +27,59 @@ export class MemoryReplayGuard implements ReplayGuard {
 
 export interface RecordingLedger extends SpendLedger {
   record(mandateHash: string, amount: bigint): Promise<void>;
+  reserve(mandateHash: string, amount: bigint, cap: bigint): Promise<string | null>;
+  /** Turn a reservation into spend (after the payment settled). */
+  commit(reservation: string): Promise<void>;
+  release(reservation: string): Promise<void>;
 }
 
-/** In-memory spend ledger (per relying party, off chain). Production: a database row per mandate hash. */
+/**
+ * In-memory spend ledger (per relying party, off chain). Reservations make the cap check and the hold one atomic step, so
+ * concurrent paid requests cannot together exceed maxTotal. Single process only; production: one row per mandate hash in a
+ * database, reserve with a conditional UPDATE (spent + reserved + amount <= cap) in one statement.
+ */
 export class MemoryLedger implements RecordingLedger {
   private totals = new Map<string, bigint>();
+  private holds = new Map<string, { hash: string; amount: bigint; expires: number }>();
+  private seq = 0;
+  private readonly ttlMs: number;
+  constructor(reservationTtlMs = 5 * 60_000) {
+    this.ttlMs = reservationTtlMs;
+  }
+  private expire(): void {
+    const now = Date.now();
+    for (const [id, h] of this.holds) if (h.expires < now) this.holds.delete(id);
+  }
+  private reserved(h: string): bigint {
+    let sum = 0n;
+    for (const x of this.holds.values()) if (x.hash === h) sum += x.amount;
+    return sum;
+  }
   async spent(h: string): Promise<bigint> {
+    this.expire();
+    return (this.totals.get(h) ?? 0n) + this.reserved(h);
+  }
+  async committed(h: string): Promise<bigint> {
     return this.totals.get(h) ?? 0n;
   }
   async record(h: string, amount: bigint): Promise<void> {
     this.totals.set(h, (this.totals.get(h) ?? 0n) + amount);
+  }
+  async reserve(h: string, amount: bigint, cap: bigint): Promise<string | null> {
+    this.expire(); // no await between the check and the hold: atomic within this process
+    if ((this.totals.get(h) ?? 0n) + this.reserved(h) + amount > cap) return null;
+    const id = `r${++this.seq}`;
+    this.holds.set(id, { hash: h, amount, expires: Date.now() + this.ttlMs });
+    return id;
+  }
+  async commit(id: string): Promise<void> {
+    const x = this.holds.get(id);
+    if (!x) return;
+    this.holds.delete(id);
+    await this.record(x.hash, x.amount);
+  }
+  async release(id: string): Promise<void> {
+    this.holds.delete(id);
   }
 }
 
@@ -66,6 +109,7 @@ export interface RequireOptions {
 }
 
 interface PendingPayment {
+  reservation?: string;
   mandateHash: string;
   wallet: string | null;
   amount: bigint;
@@ -127,7 +171,7 @@ export class MandateVerifier {
         body: raw ? new Uint8Array(raw) : "",
         headers: { mandate: req.get(MANDATE_HEADER) ?? null, signature: req.get(SIGNATURE_HEADER) ?? null },
         action,
-        ...(opts.price ? { price: opts.price } : {}),
+        ...(opts.price ? { price: opts.price, reserveSpend: !!(req.get("payment-signature") ?? req.get("x-payment")) } : {}),
         now: this.o.now?.() ?? Date.now(),
       },
       this.o.policy,
@@ -162,9 +206,15 @@ export class MandateVerifier {
           try {
             const payload = JSON.parse(Buffer.from(header, "base64").toString("utf8"));
             this.prune();
-            this.pending.set(sha256Hex(canonicalJson(payload)), { mandateHash: result.mandateHash!, wallet: result.mandate!.agentWallet ?? null, amount: BigInt(opts.price.amount), at: Date.now() });
+            this.pending.set(sha256Hex(canonicalJson(payload)), { ...(result.reservation ? { reservation: result.reservation } : {}), mandateHash: result.mandateHash!, wallet: result.mandate!.agentWallet ?? null, amount: BigInt(opts.price.amount), at: Date.now() });
           } catch {
             /* malformed payment header: x402 middleware will reject it */
+            if (result.reservation) await this.ledger.release(result.reservation);
+          }
+          // If the payment never reaches settlement (verify aborted, handler failed), release the hold when the response ends.
+          if (result.reservation) {
+            const reservation = result.reservation;
+            res.on("finish", () => { if (res.statusCode >= 400) void this.ledger.release(reservation); });
           }
         }
       }
@@ -187,16 +237,22 @@ export class MandateVerifier {
       .onAfterVerify(async (ctx: { paymentPayload: unknown; result: { isValid: boolean; payer?: string } }) => {
         const p = this.pending.get(sha256Hex(canonicalJson(ctx.paymentPayload)));
         if (!p) return { abort: true, reason: "no_mandate_for_payment", message: "payment was not preceded by a verified mandate request" };
-        if (!p.wallet) return { abort: true, reason: "mandate_has_no_wallet", message: "mandate does not name an agent wallet" };
-        if (ctx.result.payer !== p.wallet) return { abort: true, reason: "payer_not_agent_wallet", message: `payer ${ctx.result.payer} is not the mandate's agent wallet` };
+        const abort = async (reason: string, message: string) => { if (p.reservation) await this.ledger.release(p.reservation); return { abort: true, reason, message }; };
+        if (!p.wallet) return abort("mandate_has_no_wallet", "mandate does not name an agent wallet");
+        if (ctx.result.payer !== p.wallet) return abort("payer_not_agent_wallet", `payer ${ctx.result.payer} is not the mandate's agent wallet`);
         return undefined;
       })
       .onAfterSettle(async (ctx: { paymentPayload: unknown; result: { success: boolean; payer?: string; transaction: string } }) => {
         const key = sha256Hex(canonicalJson(ctx.paymentPayload));
         const p = this.pending.get(key);
-        if (!p || !ctx.result.success) return;
+        if (!p) return;
         this.pending.delete(key);
-        await this.ledger.record(p.mandateHash, p.amount);
+        if (!ctx.result.success) {
+          if (p.reservation) await this.ledger.release(p.reservation);
+          return;
+        }
+        if (p.reservation) await this.ledger.commit(p.reservation);
+        else await this.ledger.record(p.mandateHash, p.amount);
         onSettled?.({ mandateHash: p.mandateHash, payer: ctx.result.payer ?? "", transaction: ctx.result.transaction, amount: p.amount });
       });
   }

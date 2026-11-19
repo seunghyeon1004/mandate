@@ -4,25 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mandate A2A extension v1</title>
+<meta name="description" content="Specification of the Mandate A2A extension: request headers, signatures and the checks a verifier runs against Concordium.">
 <link rel="stylesheet" href="../../../assets/mandate.css">
 </head>
 <body>
-<main class="doc">
-<p class="eyebrow">A2A extension</p>
-<h1>Mandate v1</h1>
-<p>An agent that declares this extension in its Agent Card acts for a human under a <em>mandate</em>: a JSON document signed by the human's Concordium account that names the agent, its signing key, the allowed actions and domains, an expiry, spend caps, and a zero-knowledge proof that the human is 18 or older.</p>
+<main class="page stack">
+<h1>Mandate A2A extension, version 1</h1>
+<p>An agent that declares this extension in its Agent Card acts for a human under a <em>mandate</em>: a JSON document signed by the human’s Concordium account that names the agent, its signing key, the allowed actions and domains, an expiry, spend caps, and a zero-knowledge proof that the human is 18 or older.</p>
 <h2>Requests</h2>
 <p>Every HTTP request carries two headers:</p>
 <ul>
-<li><code>Mandate</code>: base64url of the RFC 8785 (JCS) form of <code>{ mandate, signature }</code>, where <code>signature</code> is the human's Concordium <code>signMessage</code> signature over the JCS form of <code>mandate</code>.</li>
+<li><code>Mandate</code>: base64url of the RFC 8785 (JCS) form of <code>{ mandate, signature }</code>, where <code>signature</code> is the human’s Concordium <code>signMessage</code> signature over the JCS form of <code>mandate</code>.</li>
 <li><code>Mandate-Signature</code>: <code>t=&lt;unix ms&gt;, n=&lt;nonce hex&gt;, s=&lt;base64url ed25519 signature&gt;</code> by the agent key over<br><code>mandate-request/v1 \n METHOD \n URL \n sha256(body) \n t \n n \n sha256(mandate)</code>.</li>
 </ul>
 <h2>What a verifier checks</h2>
 <ol>
 <li>The request signature, its freshness (60 s) and that its nonce was not seen before.</li>
 <li>Validity window, action, domain and spend caps from the mandate.</li>
-<li>The human's signature against the issuer account's keys on chain.</li>
-<li>The anchor in the agent's CIS-8004 metadata: key <code>mandate:&lt;id&gt;</code>, value <code>sha256:&lt;hash&gt;|exp:&lt;unix&gt;</code>; <code>revoked|at:&lt;unix&gt;</code> means revoked.</li>
+<li>The human’s signature against the issuer account’s keys on chain.</li>
+<li>The anchor in the agent’s CIS-8004 metadata: key <code>mandate:&lt;id&gt;</code>, value <code>sha256:&lt;hash&gt;|exp:&lt;unix&gt;</code>; <code>revoked|at:&lt;unix&gt;</code> means revoked.</li>
 <li>The agent NFT is active, owned by the issuer, and its external reference is the signing key; CIS-8 binds that key to the issuer.</li>
 <li>The age proof: audit record hash pinned in the mandate, VAA and VRA anchors on chain, the ZK presentation verifies, its credential belongs to the issuer, and it was made for this mandate id.</li>
 </ol>

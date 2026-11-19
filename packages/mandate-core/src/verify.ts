@@ -70,6 +70,8 @@ export interface VerifyResult {
   checks: Check[];
   mandate?: Mandate;
   mandateHash?: string;
+  /** Spend reservation held for this request (commit after settlement, release otherwise). */
+  reservation?: string;
 }
 
 export interface AgentRecord {
@@ -100,8 +102,14 @@ export interface ReplayGuard {
 }
 
 export interface SpendLedger {
-  /** Total already spent under this mandate at this relying party, in the asset's smallest unit. */
+  /** Total already spent or reserved under this mandate at this relying party, in the asset's smallest unit. */
   spent(mandateHash: string): Promise<bigint>;
+  /**
+   * Atomically reserve `amount` if spent + reserved + amount <= cap. Returns a reservation id, or null if it would exceed the cap.
+   * The caller commits the reservation after the payment settles, or releases it. Implementations expire stale reservations.
+   */
+  reserve?(mandateHash: string, amount: bigint, cap: bigint): Promise<string | null>;
+  release?(reservation: string): Promise<void>;
 }
 
 export interface VerifyPolicy {
@@ -122,6 +130,8 @@ export interface VerifyInput {
   action: string;
   /** Price of this request if it is paid. */
   price?: Amount;
+  /** Reserve the price against maxTotal (set when the request carries a payment), so concurrent payments cannot overshoot. */
+  reserveSpend?: boolean;
   now?: number;
 }
 
@@ -173,6 +183,7 @@ export async function verifyMandateRequest(input: VerifyInput, policy: VerifyPol
 
   let sm: SignedMandate | null = null;
   let hash = "";
+  let reservation: string | undefined;
   const sig = parseSignatureHeader(input.headers.signature);
   if (!(await run("headers", () => {
     if (!input.headers.mandate || !input.headers.signature) throw new Fail("missing_headers", "Mandate and Mandate-Signature headers are required");
@@ -226,8 +237,15 @@ export async function verifyMandateRequest(input: VerifyInput, policy: VerifyPol
       if (max.asset !== input.price.asset) throw new Fail("payment_not_allowed", `mandate allows ${max.asset}, price is in ${input.price.asset}`);
       if (BigInt(input.price.amount) > BigInt(max.amount)) throw new Fail("over_cap_per_action", `price ${input.price.amount} exceeds per-action cap ${max.amount}`);
       if (m.scope.maxTotal) {
-        const spent = deps.ledger ? await deps.ledger.spent(hash) : 0n;
-        if (spent + BigInt(input.price.amount) > BigInt(m.scope.maxTotal.amount)) throw new Fail("over_cap_total", `total ${spent + BigInt(input.price.amount)} would exceed cap ${m.scope.maxTotal.amount}`);
+        const price = BigInt(input.price.amount), cap = BigInt(m.scope.maxTotal.amount);
+        if (input.reserveSpend && deps.ledger?.reserve) {
+          const id = await deps.ledger.reserve(hash, price, cap);
+          if (!id) throw new Fail("over_cap_total", `this payment plus spent and in-flight payments would exceed the total cap ${cap}`);
+          reservation = id;
+        } else {
+          const spent = deps.ledger ? await deps.ledger.spent(hash) : 0n;
+          if (spent + price > cap) throw new Fail("over_cap_total", `total ${spent + price} would exceed cap ${cap}`);
+        }
       }
     }],
   ];
@@ -235,7 +253,12 @@ export async function verifyMandateRequest(input: VerifyInput, policy: VerifyPol
 
   // Chain checks are independent: run them in parallel.
   await Promise.all(chainChecks(signed, policy, deps.chain, run));
-  return result();
+  const r = result();
+  if (reservation) {
+    if (r.ok) r.reservation = reservation;
+    else await deps.ledger?.release?.(reservation);
+  }
+  return r;
 }
 
 type Runner = (name: CheckName, fn: () => Promise<Source | void> | Source | void) => Promise<boolean>;

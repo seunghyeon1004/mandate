@@ -1,5 +1,49 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mandate</title></head>
-<body><main><h1>Mandate</h1><p>Public pages for the Mandate project on Concordium testnet. The in-browser verify page will be published here.</p></main></body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mandate - verified humans, accountable AI agents</title>
+<meta name="description" content="A verified adult gives an AI agent a scoped, expiring, revocable mandate; websites check it against Concordium instead of showing a CAPTCHA.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/mandate.css">
+</head>
+<body>
+<a class="visually-hidden" href="#main">Skip to content</a>
+<header class="topbar"><div class="topbar__in">
+  <a class="wordmark" href="./"><svg class="wordmark__mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.5 8.2l2.2 2.2 4.8-4.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>Mandate</a>
+  <span class="env">Concordium testnet</span>
+  <nav class="nav" aria-label="Main"><a href="verify/">Verify</a><a href="a2a-extensions/mandate/v1/">Spec</a><a href="https://github.com/seunghyeon1004/mandate">Source</a></nav>
+</div></header>
+<main id="main" class="page stack">
+  <div class="page__head">
+    <h1>Let the agent through, not the bot farm</h1>
+    <p>A verified adult gives an AI agent a scoped, expiring, revocable mandate. Websites check it against Concordium instead of showing a CAPTCHA.</p>
+    <div class="actions"><a class="key key--primary" href="verify/?m=demo-valid">Verify the demo mandate</a><a class="key" href="verify/?m=demo-revoked">See a revoked one</a></div>
+  </div>
+  <section class="panel" aria-labelledby="what-h">
+    <div class="panel__head"><h2 id="what-h">What a website checks, all on chain</h2></div>
+    <table class="ledger">
+      <thead><tr><th scope="col">Question</th><th scope="col">Answered by</th></tr></thead>
+      <tbody>
+        <tr><td class="what">Is a verified adult behind this agent?</td><td>Concordium ID, zero-knowledge age proof (Verify &amp; Access), bound to the issuer’s account</td></tr>
+        <tr><td class="what">Is this really that person’s agent?</td><td>Agent Registry (CIS-8004) NFT, its signing key bound through CIS-8, Verified by Concordium badge</td></tr>
+        <tr><td class="what">May it do this, here, now, for this price?</td><td>The signed mandate and its hash anchored in the agent’s on-chain metadata</td></tr>
+        <tr><td class="what">Did the human take it back?</td><td>One revoke transaction overwrites the anchor</td></tr>
+        <tr><td class="what">Who pays?</td><td>x402 in CCD from the agent’s registered wallet; fees sponsored</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="panel" aria-labelledby="links-h">
+    <div class="panel__head"><h2 id="links-h">The demo agent</h2></div>
+    <dl class="facts">
+      <dt>Agent Card</dt><dd><a class="ext" href="agents/1261/agent-card.json">agents/1261/agent-card.json</a>, pinned on chain by its SHA-256</dd>
+      <dt>Badge</dt><dd><a class="ext" href="https://agent-registry-mcp.concordium.com/v1/check-badge/JyP9YMpKL9vhHC2hgA2pc?network=testnet">hosted badge check for token 1261</a></dd>
+      <dt>Evidence</dt><dd><a class="ext" href="https://github.com/seunghyeon1004/mandate/blob/main/docs/EVIDENCE.md">every transaction of a full run</a></dd>
+    </dl>
+  </section>
+</main>
+<footer class="footer"><div class="footer__in"><p>Testnet only. The demo identity was created on the testnet identity provider with invented attributes, so it proves the mechanism, not a real person.</p></div></footer>
+</body>
 </html>

@@ -5,11 +5,11 @@ import express from "express";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import {
-  CCD_MAINNET, CCD_TESTNET, anchorKey, anchorValue, buildMandateHeaders, mandateHash, revokedAnchorValue, signMandate,
+  CCD_MAINNET, CCD_TESTNET, anchorKey, anchorValue, buildMandateHeaders, mandateHash, revokedAnchorValue, signMandate, verifyMandateRequest,
   type AgentRecord, type ChainView, type KeyRecord, type Mandate, type RejectionCode, type SignedMandate, type Sourced,
 } from "@mandate/core";
 import type { AccountInfo } from "@concordium/web-sdk";
-import { MandateVerifier, MemoryLedger } from "../src/index.js";
+import { MandateVerifier, MemoryLedger, MemoryReplayGuard } from "../src/index.js";
 import { baseMandate, fakeAgent, fakeHuman } from "../../mandate-core/test/fixtures.js";
 
 class FakeChain implements ChainView {
@@ -143,5 +143,58 @@ describe("verifier table: one row per rejection reason", () => {
     const byName = Object.fromEntries((r.body.checks ?? []).map((c) => [c.name, c.ok]));
     expect(byName.scope_domain).toBe(false);
     expect(byName.on_chain_anchor).toBeNull();
+  });
+});
+
+describe("spend reservations (concurrent paid requests cannot overshoot maxTotal)", () => {
+  async function paid(w: World, l: MemoryLedger) {
+    const url = `http://${DOMAIN}:${port()}/report`;
+    const h = await buildMandateHeaders(w.sm, { method: "GET", url, body: "" }, w.agent.secretKey);
+    return verifyMandateRequest(
+      { method: "GET", url, body: "", headers: { mandate: h.mandate!, signature: h["mandate-signature"]! }, action: "buy_report", price: { amount: "50000", asset: "CCD" }, reserveSpend: true },
+      { network: CCD_TESTNET, registry: { index: "12802", subindex: "0" } },
+      { chain, replay: new MemoryReplayGuard(), ledger: l },
+    );
+  }
+
+  test("three simultaneous 0.05 CCD payments against a 0.12 CCD cap: exactly two hold, one is refused", async () => {
+    const w = await world();
+    const l = new MemoryLedger();
+    const results = await Promise.all([paid(w, l), paid(w, l), paid(w, l)]);
+    expect(results.filter((r) => r.ok).length).toBe(2);
+    expect(results.filter((r) => r.code === "over_cap_total").length).toBe(1);
+    expect(await l.spent(mandateHash(w.m))).toBe(100_000n); // two holds
+    expect(await l.committed(mandateHash(w.m))).toBe(0n); // nothing settled yet
+  });
+
+  test("a released hold frees the room; a committed hold becomes spend", async () => {
+    const w = await world();
+    const l = new MemoryLedger();
+    const [a, b] = await Promise.all([paid(w, l), paid(w, l)]);
+    expect((await paid(w, l)).code).toBe("over_cap_total");
+    await l.release(a!.reservation!);
+    const c = await paid(w, l);
+    expect(c.ok).toBe(true);
+    await l.commit(b!.reservation!);
+    await l.commit(c.reservation!);
+    expect(await l.committed(mandateHash(w.m))).toBe(100_000n);
+    expect((await paid(w, l)).code).toBe("over_cap_total");
+  });
+
+  test("a request that fails a later check releases its hold", async () => {
+    const w = await world();
+    chain.anchors.set(`${w.m.agent.tokenId}/${anchorKey(w.m.id)}`, revokedAnchorValue(1));
+    const l = new MemoryLedger();
+    const r = await paid(w, l);
+    expect(r.code).toBe("revoked");
+    expect(await l.spent(mandateHash(w.m))).toBe(0n);
+  });
+
+  test("stale holds expire", async () => {
+    const w = await world();
+    const l = new MemoryLedger(1);
+    await paid(w, l);
+    await new Promise((res) => setTimeout(res, 5));
+    expect(await l.spent(mandateHash(w.m))).toBe(0n);
   });
 });

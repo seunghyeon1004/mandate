@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mandate console</title>
+<meta name="description" content="Issue, inspect and revoke the mandates your AI agent acts under, anchored on Concordium testnet.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/mandate.css">
+</head>
+<body>
+<a class="visually-hidden" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar__in">
+    <a class="wordmark" href="/"><svg class="wordmark__mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.5 8.2l2.2 2.2 4.8-4.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>Mandate</a>
+    <span class="env">Console, Concordium testnet</span>
+    <nav class="nav" aria-label="Sections"><a href="#agent-h">Agent</a><a href="#issue-h">Issue</a><a href="#mandates-h">Mandates</a><a href="#log-h">On-chain log</a></nav>
+  </div>
+</header>
+<main id="main" class="page stack">
+  <div class="page__head">
+    <h1>Your agent and its mandates</h1>
+    <p>You decide what your agent may do, where, until when and for how much. Each mandate is anchored on Concordium; revoking takes one transaction. You pay no fees: they are sponsored.</p>
+  </div>
+
+  <section class="panel" aria-labelledby="agent-h" id="agent">
+    <div class="panel__head"><h2 id="agent-h">Your agent</h2><p id="agent-badge">Checking the badge</p></div>
+    <dl class="facts" id="agent-facts"><dt><span class="skeleton" style="width:5rem"></span></dt><dd><span class="skeleton" style="width:60%"></span></dd><dt><span class="skeleton" style="width:5rem"></span></dt><dd><span class="skeleton" style="width:40%"></span></dd></dl>
+  </section>
+
+  <section class="panel" aria-labelledby="issue-h">
+    <div class="panel__head"><h2 id="issue-h">Give your agent a mandate</h2><p>About 30 seconds on testnet</p></div>
+    <div class="issue">
+      <form class="panel__body stack" id="issue" novalidate>
+        <fieldset class="field"><legend>The agent may</legend>
+          <div class="checks" id="f-actions">
+            <label class="check"><input type="checkbox" name="actions" value="signup" checked> Sign up</label>
+            <label class="check"><input type="checkbox" name="actions" value="post_comment" checked> Post comments</label>
+            <label class="check"><input type="checkbox" name="actions" value="buy_report" checked> Buy reports</label>
+            <label class="check"><input type="checkbox" name="actions" value="delete_account"> Delete accounts</label>
+          </div>
+          <small class="err" id="e-actions" hidden></small>
+        </fieldset>
+        <div class="field"><label for="f-domains">On these sites</label><input class="input" id="f-domains" name="domains" value="localhost" aria-describedby="h-domains e-domains" autocomplete="off"><small id="h-domains">Host names, separated by commas.</small><small class="err" id="e-domains" hidden></small></div>
+        <div class="grid-form">
+          <div class="field"><label for="f-ttl">For</label><select class="select" id="f-ttl" name="ttl"><option value="1h">1 hour</option><option value="1d" selected>1 day</option><option value="7d">7 days</option><option value="30d">30 days</option></select></div>
+          <div class="field"><label for="f-per">Max per paid action (CCD)</label><input class="input" id="f-per" name="maxPerAction" inputmode="decimal" value="0.05" aria-describedby="e-maxPerAction"><small class="err" id="e-maxPerAction" hidden></small></div>
+          <div class="field"><label for="f-total">Max in total (CCD)</label><input class="input" id="f-total" name="maxTotal" inputmode="decimal" value="0.12" aria-describedby="e-maxTotal"><small class="err" id="e-maxTotal" hidden></small></div>
+        </div>
+        <p class="small muted">Issuing proves you are 18 or older with a zero-knowledge proof from your Concordium ID (no birth date leaves your wallet), then you sign the mandate and its hash is anchored on chain.</p>
+        <p class="callout callout--error" id="issue-error" role="alert" hidden></p>
+        <div class="actions"><button class="key key--primary" type="submit" id="issue-btn">Prove age and issue</button></div>
+      </form>
+      <div class="panel__body progress" aria-live="polite">
+        <h3 class="progress__h">Progress</h3>
+        <ol class="steps" id="steps">
+          <li data-step="vra">Age check requested (Verify &amp; Access request anchor)</li>
+          <li data-step="presentation">Your wallet answers with a zero-knowledge proof</li>
+          <li data-step="vaa">Proof verified, audit anchored</li>
+          <li data-step="signed">You sign the mandate</li>
+          <li data-step="anchor">Mandate hash anchored on your agent</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="mandates-h">
+    <div class="panel__head"><h2 id="mandates-h">Mandates</h2><p id="mandates-note">Status is read from the chain</p></div>
+    <div class="scroll-x"><table class="ledger" id="mandates"><thead><tr><th scope="col">Mandate</th><th scope="col">May do</th><th scope="col">Until</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody><tr><td colspan="5"><span class="skeleton" style="width:70%"></span></td></tr></tbody></table></div>
+  </section>
+
+  <section class="panel" aria-labelledby="log-h">
+    <div class="panel__head"><h2 id="log-h">On-chain log</h2><p>Every transaction, linked to CCDExplorer. Your account paid none of the fees.</p></div>
+    <div class="scroll-x"><table class="ledger" id="log"><thead><tr><th scope="col">Group</th><th scope="col">What happened</th><th scope="col">Transaction</th></tr></thead><tbody></tbody></table></div>
+  </section>
+</main>
+<footer class="footer"><div class="footer__in">
+  <p>Testnet. The identity behind this console was created on the testnet identity provider with invented attributes. In this demo the console holds your testnet key; in production your Concordium wallet signs and this page holds no keys.</p>
+</div></footer>
+<noscript><p class="callout">The console needs JavaScript.</p></noscript>
+<script type="module" src="/console.js"></script>
+</body>
+</html>

@@ -1,1 +1,92 @@
-<!doctype html><meta charset="utf-8"><pre id="out">running</pre><script type="module" src="./src/probe.ts"></script>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify a mandate - Mandate</title>
+<meta name="description" content="Check an AI agent's mandate against Concordium testnet from your browser: signature, on-chain anchor, Agent Registry, CIS-8 key binding and a zero-knowledge age proof.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1.5' y='1.5' width='13' height='13' rx='2' fill='none' stroke='%232f5bd3' stroke-width='2'/%3E%3Cpath d='M4.5 8.2l2.2 2.2 4.8-4.8' fill='none' stroke='%232f5bd3' stroke-width='2'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="visually-hidden" href="#main">Skip to the result</a>
+<header class="topbar">
+  <div class="topbar__in">
+    <a class="wordmark" href="../">
+      <svg class="wordmark__mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.5 8.2l2.2 2.2 4.8-4.8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      Mandate
+    </a>
+    <span class="env">Concordium testnet</span>
+    <nav class="nav" aria-label="Main">
+      <a href="./" aria-current="page">Verify</a>
+      <a href="../a2a-extensions/mandate/v1/">Spec</a>
+      <a href="https://github.com/seunghyeon1004/mandate">Source</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="page">
+  <div class="page__head">
+    <h1>Verify a mandate</h1>
+    <p>A mandate is a human’s signed permission for an AI agent. Every check below runs in your browser against Concordium testnet; nothing goes through our servers.</p>
+  </div>
+
+  <div class="stack">
+    <div class="actions" role="group" aria-label="Which mandate">
+      <div class="tray" id="picker">
+        <a class="key" href="?m=demo-valid" data-m="demo-valid">Valid demo</a>
+        <a class="key" href="?m=demo-revoked" data-m="demo-revoked">Revoked demo</a>
+        <a class="key" href="?m=paste" data-m="paste">Your own</a>
+      </div>
+    </div>
+
+    <section class="panel" id="paste" hidden aria-labelledby="paste-h">
+      <div class="panel__head"><h2 id="paste-h">Check your own mandate</h2><p>Paste the signed mandate JSON, or a link to it.</p></div>
+      <form class="panel__body stack" id="paste-form">
+        <div class="field">
+          <label for="paste-input">Signed mandate (JSON) or https link</label>
+          <textarea class="textarea" id="paste-input" spellcheck="false" aria-describedby="paste-help"></textarea>
+          <small id="paste-help">The value of an agent’s Mandate header, decoded, has the same shape: an object with a mandate and a signature.</small>
+        </div>
+        <p class="callout callout--error" id="paste-error" role="alert" hidden></p>
+        <div class="actions"><button class="key key--primary" type="submit">Verify</button></div>
+      </form>
+    </section>
+
+    <section class="panel" id="result" aria-labelledby="verdict-word" aria-busy="true">
+      <div class="verdict verdict--wait" id="verdict" aria-live="polite">
+        <h2 class="verdict__word" id="verdict-word">Checking</h2>
+        <p class="verdict__why" id="verdict-why">Reading the mandate and asking Concordium testnet.</p>
+      </div>
+      <dl class="facts" id="facts"></dl>
+    </section>
+
+    <section class="panel" aria-labelledby="ledger-h">
+      <div class="panel__head"><h2 id="ledger-h">Evidence</h2><p id="elapsed">Each answer names its source.</p></div>
+      <div class="scroll-x">
+        <table class="ledger" id="ledger">
+          <thead><tr><th scope="col">#</th><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Answered by</th><th scope="col">Evidence</th></tr></thead>
+          <tbody></tbody>
+          <caption>Testnet identities are created with invented attributes on the testnet identity provider, so “18 or older” here proves the mechanism, not a real person.</caption>
+        </table>
+      </div>
+    </section>
+
+    <details class="disclose">
+      <summary>Show the signed mandate (JSON)</summary>
+      <div class="code" id="raw"><div class="code__head"><span>mandate.json</span><span id="raw-hash"></span></div><pre id="raw-pre"></pre></div>
+    </details>
+  </div>
+  <noscript><p class="callout">This page verifies in your browser and needs JavaScript. The same checks run in the open-source verifier at github.com/seunghyeon1004/mandate.</p></noscript>
+</main>
+
+<footer class="footer">
+  <div class="footer__in">
+    <p>Concordium testnet. Agent Registry CIS-8004 &lt;12802,0&gt;, CIS-8 &lt;12801,0&gt;.</p>
+    <p>Spending caps in a mandate are enforced by each website’s verifier, off chain; the chain holds the anchor, the proof and the receipts.</p>
+  </div>
+</footer>
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>

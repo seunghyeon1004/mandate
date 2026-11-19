@@ -14,11 +14,15 @@
     "typecheck": "tsc -b && tsc -p tsconfig.apps.json",
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
-    "test:web": "playwright test",
+    "test:web": "npm run build --workspace @mandate/verify-page && playwright test",
     "mandate": "node apps/console/src/cli.ts",
-    "operator": "node apps/facilitator/src/main.ts"
+    "operator": "node apps/facilitator/src/main.ts",
+    "console": "node apps/console/src/server.ts",
+    "site": "node apps/demo-site/src/main.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
     "@types/express": "5.0.6",
     "@types/node": "^24.19.2",
     "fast-check": "4.10.3",

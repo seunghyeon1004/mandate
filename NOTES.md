@@ -83,3 +83,16 @@ Agent token 1261, badge `JyP9YMpKL9vhHC2hgA2pc`.
 - Paid routes: mandate check runs before x402, so an unauthorised or over-cap agent never receives a 402; spend is added to the ledger only after settlement.
 - Known limits (to state in README): replay store and spend ledger are in memory (single process); concurrent paid requests can overshoot `maxTotal` by in-flight amounts (production: reserve at verify time); receipts are submitted without waiting for finalization.
 - Recording content of workshops 3, 5 and 6 is unverified (Encode login needed); nothing from the recordings is cited.
+
+## Gate 2 (2026-11-19)
+
+- **Badge**: Agent Card built with MCP `build_agent_card` (badge extension included), our Mandate A2A extension appended, published on GitHub Pages, served bytes checked (SHA-256 `20d9555f…`), pinned with a sponsored `setAgentURI` (tx `a4d2eebd…`). Hosted `check_badge`: `badge_valid: true`, `issues: []`. Now a step of the integration run.
+- **Public verify page** (`apps/verify-page`, built by the Pages workflow): web-sdk with `ConcordiumGRPCWebClient`, our packages and the ZK verifier (wasm) run in the browser; ~5 s per mandate. Demo mandates on Pages: `demo-valid` (bc003940…, expires 2027-02-17 01:06 UTC) and `demo-revoked` (7da0d55c…, revoked in tx `00dd4ec6…`). Their audit records are on Pages (content-addressed).
+- `verifyMandate()` (mandate-only checks) shares the chain checks with `verifyMandateRequest()`.
+- **Spend reservations**: `SpendLedger.reserve/commit/release`; paid requests that carry a payment reserve atomically, released on any failure, on a 4xx response, or after a TTL. Test: three concurrent 0.05 payments against a 0.12 cap give two holds and one `over_cap_total`.
+- **Receipts** are tracked from "submitted" to "finalized" in the background; the demo site shows both states.
+- **UI**: one shared stylesheet (`site/assets/mandate.css`), Hallmark theme Cobalt (app scope); sloplint clean on all pages. Playwright web tests (bundled Chromium, desktop 1280x900 and phone 390x844): 16 pass, axe 0 serious or critical.
+- **Console server** refuses POSTs whose Origin is not the console itself, so another web page cannot drive sponsored transactions through it.
+- **Mainnet**: MCP `contract_info(mainnet)` shows CIS-8004 `<10082,0>` and CIS-8 `<10081,0>` on the same module refs as testnet.
+- Lockfile: npm drops platform optional packages (lightningcss) when updating an existing lockfile; regenerate from scratch and check for `lightningcss-linux-x64-gnu` before pushing (CI `npm ci` fails otherwise).
+- LLM agent mode: not built at Gate 2 (optional, last). The scripted agent carries the demo.

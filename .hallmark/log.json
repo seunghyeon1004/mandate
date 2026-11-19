@@ -1,0 +1,25 @@
+[
+ {
+  "scope": "app",
+  "shape": "app screen",
+  "theme": "cobalt",
+  "axes": "light/grotesk-sans/cool",
+  "hero": "none (app)",
+  "nav": "top bar",
+  "footer": "single note",
+  "imagery": "none",
+  "photos": [],
+  "entry": "verdict panel",
+  "fingerprint": "ledger-of-checks",
+  "sections": [
+   "verify: verdict, facts, evidence ledger, raw JSON",
+   "site: signup with puzzle placeholder, agent request feed",
+   "console: agent, issue form with progress, mandates ledger, on-chain log"
+  ],
+  "signature": "the evidence ledger: each check, its result, who answered, the transaction",
+  "waived": [],
+  "prompt": "Mandate: verify page, demo relying party, issuer console",
+  "date": "2026-11-19",
+  "mode": "build"
+ }
+]

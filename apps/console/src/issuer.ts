@@ -132,7 +132,9 @@ async function holderPresentation(ctx: Ctx, request: VerificationRequestV1.Type)
 }
 
 /** Verifier side (operator): anchor the request (VRA), verify the presentation, anchor the audit record (VAA). */
-export async function proveAdult(ctx: Ctx, mandateId: string) {
+export type StepFn = (step: "vra" | "presentation" | "vaa" | "signed" | "anchor", detail?: { tx?: string; note?: string }) => void;
+
+export async function proveAdult(ctx: Ctx, mandateId: string, onStep: StepFn = () => {}) {
   const op = accountKey("sponsor");
   const verifier = { sender: AccountAddress.fromBase58(op.account), signer: op.signer };
   const claims = VerificationRequestV1.claimsBuilder().addAccountClaims([new IdentityProviderDID("Testnet", 0)], (b) => b.addMinimumAge(18)).getClaims();
@@ -140,11 +142,14 @@ export async function proveAdult(ctx: Ctx, mandateId: string) {
   const { type: _t, ...context } = VerificationRequestV1.createSimpleContext(nonce, `mandate:${mandateId}`, "mandate-issuer", `Mandate ${mandateId}`);
   const request = await VerificationRequestV1.createAndAnchor(ctx.client, verifier, context, claims, { app: "mandate" });
   await ctx.client.waitForTransactionFinalization(request.transactionRef, 120_000);
+  onStep("vra", { tx: request.transactionRef.toString() });
   const presentation = await holderPresentation(ctx, request);
+  onStep("presentation", { note: "zero-knowledge presentation created by the testnet wallet (headless)" });
   const audit = await VerificationAuditRecordV1.createAndAnchor(crypto.randomUUID(), request, presentation, ctx.client, { metadata: verifier, info: { app: "mandate" } }, { network: "Testnet" });
   if (audit.type !== "success") throw new Error("age proof did not verify");
   const vaa = audit.result.anchorTransactionRef;
   await ctx.client.waitForTransactionFinalization(vaa, 120_000);
+  onStep("vaa", { tx: vaa.toString() });
   const record = JSON.parse(JSON.stringify(audit.result.record.toJSON(), (_k, v) => (typeof v === "bigint" ? String(v) : v)));
   return { vra: request.transactionRef.toString(), vaa: vaa.toString(), record };
 }
@@ -158,11 +163,11 @@ export interface IssueOptions {
   recordBaseUrl?: string;
 }
 
-export async function issueMandate(ctx: Ctx, sponsor: SponsorClient, agent: AgentState, o: IssueOptions, log: (s: string) => void = console.log): Promise<IssuedMandate> {
+export async function issueMandate(ctx: Ctx, sponsor: SponsorClient, agent: AgentState, o: IssueOptions, log: (s: string) => void = console.log, onStep: StepFn = () => {}): Promise<IssuedMandate> {
   const human = accountKey("human");
   const id = crypto.randomUUID();
   log(`issuing mandate ${id}: age proof (VRA/VAA) ...`);
-  const proof = await proveAdult(ctx, id);
+  const proof = await proveAdult(ctx, id, onStep);
   const recordSha256 = sha256Hex(canonicalJson(proof.record));
   const recordFile = saveState(`proofs/${recordSha256}.json`, proof.record);
   const now = Math.floor(Date.now() / 1000);
@@ -179,17 +184,21 @@ export async function issueMandate(ctx: Ctx, sponsor: SponsorClient, agent: Agen
     nonce: randomNonce(),
   };
   const signed = await signMandate(m, human.signer);
+  onStep("signed", { note: "signed with the human account key (signMessage)" });
   const anchor = ok(await sendContractUpdate(ctx.client, { handle: ctx.registry.cis8004, entrypoint: "setMetadata", params: { key: anchorKey(id), token_id: tokenIdHex(agent.tokenId), value: hexToBytes(toHex(new TextEncoder().encode(anchorValue(m)))) } }, human, sponsor), "anchor setMetadata");
   log(`anchored ${anchorKey(id)} = ${anchorValue(m)} in ${anchor.hash} (fee payer ${anchor.feePayer})`);
+  onStep("anchor", { tx: anchor.hash });
   saveState(`mandates/${id}.json`, signed);
-  saveState("mandates/current.json", { id });
+  saveState(`mandates/${id}.txs.json`, { vra: proof.vra, vaa: proof.vaa, anchor: anchor.hash, at: new Date().toISOString() });
   return { signed, hash: mandateHash(m), recordFile, txs: { vra: proof.vra, vaa: proof.vaa, anchor } };
 }
 
 /** Revoke in one transaction: overwrite the anchor. Every verifier sees it within its stated revocation bound. */
 export async function revokeMandate(ctx: Ctx, sponsor: SponsorClient, m: Mandate): Promise<TxOutcome> {
   const human = accountKey("human");
-  return ok(await sendContractUpdate(ctx.client, { handle: ctx.registry.cis8004, entrypoint: "setMetadata", params: { key: anchorKey(m.id), token_id: tokenIdHex(m.agent.tokenId), value: hexToBytes(toHex(new TextEncoder().encode(revokedAnchorValue(Math.floor(Date.now() / 1000))))) } }, human, sponsor), "revoke setMetadata");
+  const t = ok(await sendContractUpdate(ctx.client, { handle: ctx.registry.cis8004, entrypoint: "setMetadata", params: { key: anchorKey(m.id), token_id: tokenIdHex(m.agent.tokenId), value: hexToBytes(toHex(new TextEncoder().encode(revokedAnchorValue(Math.floor(Date.now() / 1000))))) } }, human, sponsor), "revoke setMetadata");
+  saveState(`mandates/${m.id}.revoked.json`, { tx: t.hash, at: new Date().toISOString(), feePayer: t.feePayer });
+  return t;
 }
 
 export async function anchorStatus(ctx: Ctx, m: Mandate) {

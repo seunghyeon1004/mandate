@@ -28,6 +28,7 @@ switch (cmd) {
     const agent = state<AgentState>("agent.json");
     if (!agent) throw new Error("run `mandate register` first");
     const r = await issueMandate(ctx, sponsor, agent, { actions: values.actions!.split(","), domains: values.domains!.split(","), ttlSeconds: Number(values.ttl), maxPerAction: values["max-per"]!, maxTotal: values["max-total"]!, ...(values["record-base"] ? { recordBaseUrl: values["record-base"] } : {}) });
+    saveState("mandates/current.json", { id: r.signed.mandate.id });
     console.log(JSON.stringify({ id: r.signed.mandate.id, hash: r.hash, vra: explorerTx(r.txs.vra), vaa: explorerTx(r.txs.vaa), anchor: explorerTx(r.txs.anchor.hash) }, null, 2));
     break;
   }

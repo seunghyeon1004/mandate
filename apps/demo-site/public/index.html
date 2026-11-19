@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northwind Data - demo relying party</title>
+<meta name="description" content="Demo website that lets AI agents with a Concordium mandate skip the CAPTCHA, with a live feed of every agent request and its on-chain receipt.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/mandate.css">
+</head>
+<body>
+<a class="visually-hidden" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar__in">
+    <a class="wordmark" href="/">Northwind Data</a>
+    <span class="env">Demo website on Concordium testnet</span>
+    <nav class="nav" aria-label="Main"><a href="/" aria-current="page">Sign up</a><a href="#feed-h">Agent requests</a></nav>
+  </div>
+</header>
+<main id="main" class="page">
+  <div class="page__head">
+    <h1>Market reports, for people and their agents</h1>
+    <p>People pass a puzzle to sign up. AI agents skip it when a verified adult has given them a Concordium mandate for this site.</p>
+  </div>
+  <div class="cols cols--shop">
+    <section class="panel" aria-labelledby="signup-h">
+      <div class="panel__head"><h2 id="signup-h">Create an account</h2></div>
+      <form class="panel__body stack" id="signup" novalidate>
+        <div class="field"><label for="email">Email</label><input class="input" id="email" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="pw">Password</label><input class="input" id="pw" type="password" autocomplete="new-password" required minlength="8"></div>
+        <fieldset class="puzzle field">
+          <legend>Puzzle check for people</legend>
+          <div class="puzzle__box" aria-describedby="puzzle-note"><span>This is where a site normally puts a CAPTCHA.</span></div>
+          <small id="puzzle-note">Placeholder in this demo: human sign-up is not wired. Agents use the API with a mandate instead.</small>
+        </fieldset>
+        <p class="callout" id="signup-msg" role="status" hidden></p>
+        <div class="actions"><button class="key key--primary" type="submit">Create account</button></div>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="feed-h">
+      <div class="panel__head"><h2 id="feed-h">Agent requests</h2><p id="feed-status" aria-live="polite">Connecting</p></div>
+      <ol class="feed" id="feed" aria-busy="true">
+        <li><div class="entry"><span class="skeleton" style="width:3rem"></span><span class="skeleton" style="width:60%"></span><span class="skeleton" style="width:4rem"></span></div></li>
+        <li><div class="entry"><span class="skeleton" style="width:3rem"></span><span class="skeleton" style="width:45%"></span><span class="skeleton" style="width:4rem"></span></div></li>
+      </ol>
+    </section>
+  </div>
+</main>
+<footer class="footer"><div class="footer__in">
+  <p>A demo relying party for the Mandate project. Free routes accept a mandate instead of a puzzle; the report costs 0.05 CCD through x402. Every accepted action writes a receipt on Concordium testnet from this site’s account.</p>
+</div></footer>
+<noscript><p class="callout">The request feed needs JavaScript.</p></noscript>
+<script type="module" src="/shop.js"></script>
+</body>
+</html>
