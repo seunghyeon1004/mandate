@@ -96,3 +96,11 @@ Agent token 1261, badge `JyP9YMpKL9vhHC2hgA2pc`.
 - **Mainnet**: MCP `contract_info(mainnet)` shows CIS-8004 `<10082,0>` and CIS-8 `<10081,0>` on the same module refs as testnet.
 - Lockfile: npm drops platform optional packages (lightningcss) when updating an existing lockfile; regenerate from scratch and check for `lightningcss-linux-x64-gnu` before pushing (CI `npm ci` fails otherwise).
 - LLM agent mode: not built at Gate 2 (optional, last). The scripted agent carries the demo.
+
+## Final gate (2026-11-19)
+
+- **Judge path proven once, end to end**: `MANDATE_SECRETS_DIR=../.secrets/judge-run MANDATE_STATE_DIR=../.state/judge-run node scripts/demo.mjs setup`, exit 0 in 5:59. Two new identities (Test Human, Test Operator) via the self-service testnet IdP in bundled Chromium; accounts human `4VU5bwd5…GU7`, agentWallet `4XCS4ePF…a70e`-deploy, sponsor `4TEXtnkG…7pRv`, site `3otdkm35…MK7`; three faucet drops; CIS-8 key binding `c0758569…3d42` (fee payer: the new sponsor), CIS-8004 register `27ffb990…98f1` -> token 1264, setAgentWallet `51300f60…6450`, mandate `9012029d…` with VRA `03fc275c…`, VAA `18b6579b…`, anchor `deca660e…`. Those accounts are left alone from here.
+- **Integration**: the first final-gate run failed at the issue step before any transaction (error text lost to a truncated log); the next two runs passed 9/9. The test now records an issue error in its evidence JSON. docs/EVIDENCE.md is from the run started 01:53:55 UTC.
+- **Verify page** retries up to 3 times with a visible "Retrying" state and renders node or MCP failures as "Could not check", never as a failed check (two Playwright tests simulate a full outage and a transient one).
+- **Layout guard** in Playwright (no horizontal overflow, no overlapping cells in a row, no wrapping nav link); with the old phone table restored it reports 5 problems, with the fix 0.
+- **Video captures**: `scripts/video/capture.ts`, 8 page-only shots at 1920x1080 from a real testnet run (docs/video/RUN.md). Videos are not committed (`docs/video/captures/*.webm` is gitignored; an early set is in commit 6f3f2d9's history).

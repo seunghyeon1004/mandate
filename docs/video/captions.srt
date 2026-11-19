@@ -1,0 +1,42 @@
+1
+00:00:00,300 --> 00:00:07,800
+Agents hit CAPTCHAs
+
+2
+00:00:08,300 --> 00:00:21,800
+A human's signed permission,
+checked on chain
+
+3
+00:00:24,000 --> 00:00:36,000
+Age proved, nothing revealed
+
+4
+00:00:36,000 --> 00:00:43,000
+Testnet identity with
+invented attributes
+
+5
+00:00:43,000 --> 00:00:50,000
+Signed by a local test wallet;
+wallet popup not used
+
+6
+00:00:50,300 --> 00:01:14,800
+15 checks, no puzzle
+
+7
+00:01:15,300 --> 00:01:39,800
+Pays within the cap
+
+8
+00:01:40,300 --> 00:02:04,800
+Revoked in one transaction
+
+9
+00:02:05,300 --> 00:02:29,800
+Verify it yourself
+
+10
+00:02:30,300 --> 00:02:40,000
+github.com/seunghyeon1004/mandate

@@ -70,7 +70,8 @@ await shot(3, "issue a mandate", async (page, mark) => {
   await page.locator("#issue-btn").click();
   await page.locator('#steps li[data-step="anchor"][data-state="done"]').waitFor({ timeout: 180_000 });
   await pause(2500);
-  await page.locator("#mandates").scrollIntoViewIfNeeded();
+  await page.locator("#mandates tbody tr.mrow").first().evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await pause(800);
   await mark("zoom", "new mandate, Active", "#mandates tbody tr.mrow");
   await pause(3000);
   const r = await (await fetch(`${CONSOLE}api/mandates`)).json() as { mandates: Array<{ id: string; status: string }> };
@@ -120,7 +121,7 @@ await shot(6, "revoke", async (page, mark) => {
   await page.goto(CONSOLE);
   const row = page.locator(`#mandates tbody tr.mrow:has(.confirm[data-id="${issuedId}"])`);
   await row.waitFor({ timeout: 60_000 });
-  await row.scrollIntoViewIfNeeded();
+  await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await pause(1500);
   await mark("click", "Revoke", `.confirm[data-id="${issuedId}"] button`);
   await row.locator('button[data-act="ask"]').click();

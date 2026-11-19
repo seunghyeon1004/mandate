@@ -1,0 +1,15 @@
+Websites can't tell a person's AI agent from a bot farm, so they block both.
+
+Mandate lets a verified adult give their agent a signed, limited permission that any website can check on Concordium.
+
+I prove I'm over eighteen with a zero-knowledge proof, so no birth date leaves my wallet. I choose what my agent may do, where, until when and for how much. One anchor goes on chain, and I pay no fees.
+
+My agent signs up. The site runs fifteen checks, from the agent's key to my age proof, and lets it in without a puzzle. A receipt is written on chain.
+
+Paid content uses x402 in CCD, paid from the agent's own registered wallet. Above my cap, the site refuses before any money moves.
+
+If I change my mind, one transaction revokes the mandate. Seconds later, the site refuses my agent.
+
+Anyone can check a mandate in their own browser, straight from testnet. Each answer names its source.
+
+Mandate is open source and runs on Concordium testnet today. Try the verifier at the link below.

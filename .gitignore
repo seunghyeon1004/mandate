@@ -14,3 +14,4 @@ evidence-local/
 .DS_Store
 *.tsbuildinfo
 site/verify/
+docs/video/captures/*.webm

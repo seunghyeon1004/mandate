@@ -1,4 +1,6 @@
-# Demo video: proposed shot list (Gate 2 proposal, not produced yet)
+# Demo video: shot list (Gate 2 proposal)
+
+Superseded by [SCRIPT.md](SCRIPT.md), which applies the lead's two changes (neutral puzzle placeholder in shot 1; honesty captions in shot 3) and drops the phone-wallet moment.
 
 Target 2:40 (limit 3:00). English. 16:9. Captions understandable with sound off. Page-only captures with Playwright `recordVideo` (no screen recording); cursor moves, click ripples and zooms are added in code at render time. Every number on screen comes from docs/EVIDENCE.md or a live page. Three features only: **mandate instead of CAPTCHA**, **pay within caps**, **revoke in one transaction**.
 

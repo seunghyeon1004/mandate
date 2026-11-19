@@ -206,3 +206,4 @@ td.actions-cell { text-align: right; white-space: nowrap; }
   .mtable td.actions-cell { text-align: left; white-space: normal; padding-top: var(--space-xs); }
 }
 @media (max-width: 40rem) { .nav { gap: var(--space-sm); font-size: var(--text-xs); } }
+.mrow--more td { padding: var(--space-md) var(--space-lg); }

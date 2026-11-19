@@ -34,7 +34,7 @@ const REASON = {
   bad_human_signature: "Rejected: mandate not signed by its issuer", not_anchored: "Rejected: mandate not on chain", anchor_mismatch: "Rejected: mandate altered",
   agent_revoked: "Rejected: agent revoked in the registry", key_not_bound: "Rejected: agent key not bound", adult_proof_invalid: "Rejected: age proof did not verify", chain_unavailable: "Could not reach the chain",
 };
-const time = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const time = (iso) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" }) + "Z";
 const ccd = (m) => `${(Number(m) / 1e6).toLocaleString("en-GB", { maximumFractionDigits: 6 })} CCD`;
 const seen = new Set();
 let last = "";

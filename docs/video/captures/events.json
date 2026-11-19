@@ -4,11 +4,11 @@
     "height": 1080
   },
   "zoom": 1.5,
-  "mandate": "84273576-5c1a-45c1-9bca-4605c36972ed",
+  "mandate": "44746cd5-2007-462e-b1a1-e2c43a9d52c6",
   "shots": {
     "shot-1": [
       {
-        "t": 1.898,
+        "t": 1.921,
         "kind": "zoom",
         "x": 484,
         "y": 851,
@@ -17,7 +17,7 @@
     ],
     "shot-2": [
       {
-        "t": 4.687,
+        "t": 3.647,
         "kind": "zoom",
         "x": 1551,
         "y": 471,
@@ -26,92 +26,92 @@
     ],
     "shot-3": [
       {
-        "t": 1.941,
+        "t": 1.93,
         "kind": "click",
         "x": 309,
-        "y": 1143,
+        "y": 1014,
         "label": "Prove age and issue"
       },
       {
-        "t": 24.426,
+        "t": 25.196,
         "kind": "zoom",
         "x": 960,
-        "y": 280,
+        "y": 612,
         "label": "new mandate, Active"
       }
     ],
     "shot-4": [
       {
-        "t": 12.813,
+        "t": 9.173,
         "kind": "click",
         "x": 1306,
         "y": 576,
         "label": "All 15 checks passed"
       },
       {
-        "t": 17.847,
+        "t": 16.534,
         "kind": "zoom",
-        "x": 1361,
+        "x": 1366,
         "y": 521,
         "label": "receipt finalized"
       }
     ],
     "shot-5": [
       {
-        "t": 14.168,
+        "t": 12.44,
         "kind": "zoom",
-        "x": 1361,
-        "y": 537,
+        "x": 1366,
+        "y": 521,
         "label": "paid 0.05 CCD"
       },
       {
-        "t": 20.495,
+        "t": 18.252,
         "kind": "zoom",
         "x": 1503,
-        "y": 478,
+        "y": 476,
         "label": "refused above the cap"
       }
     ],
     "shot-6": [
       {
-        "t": 2.081,
+        "t": 2.085,
         "kind": "click",
         "x": 1558,
         "y": 594,
         "label": "Revoke"
       },
       {
-        "t": 2.862,
+        "t": 2.863,
         "kind": "click",
         "x": 1391,
         "y": 664,
         "label": "Revoke now"
       },
       {
-        "t": 16.963,
+        "t": 15.83,
         "kind": "zoom",
         "x": 1570,
-        "y": 478,
+        "y": 475,
         "label": "Rejected: mandate revoked"
       }
     ],
     "shot-7": [
       {
-        "t": 7.769,
+        "t": 7.509,
         "kind": "zoom",
         "x": 960,
         "y": 495,
         "label": "Valid"
       },
       {
-        "t": 10.303,
+        "t": 10.027,
         "kind": "zoom",
         "x": 963,
         "y": 154,
         "label": "Answered by"
       },
       {
-        "t": 18.884,
+        "t": 18.436,
         "kind": "zoom",
         "x": 960,
         "y": 495,
@@ -120,7 +120,7 @@
     ],
     "shot-8": [
       {
-        "t": 2.174,
+        "t": 1.696,
         "kind": "zoom",
         "x": 295,
         "y": 360,

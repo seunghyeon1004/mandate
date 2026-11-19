@@ -47,6 +47,7 @@ async function loadAgent() {
   }
 }
 
+let showAll = false;
 async function loadMandates() {
   const tb = $("mandates").querySelector("tbody");
   try {
@@ -55,7 +56,10 @@ async function loadMandates() {
       tb.innerHTML = `<tr><td colspan="5"><div class="empty"><p>No mandates yet. Give your agent one above; it appears here with its status on chain.</p></div></td></tr>`;
       return;
     }
-    tb.innerHTML = d.mandates.map((m) => {
+    // Active mandates first (the ones you may want to revoke), then the newest others.
+    const sorted = [...d.mandates.filter((m) => m.status === "active"), ...d.mandates.filter((m) => m.status !== "active")];
+    const list = showAll ? sorted : sorted.slice(0, Math.max(5, d.mandates.filter((m) => m.status === "active").length));
+    tb.innerHTML = list.map((m) => {
       const caps = m.scope.maxPerAction ? `; up to ${ccd(m.scope.maxPerAction.amount)} each${m.scope.maxTotal ? `, ${ccd(m.scope.maxTotal.amount)} total` : ""}` : "";
       const actions = m.status === "active"
         ? `<div class="confirm" data-id="${esc(m.id)}"><button class="key key--danger" type="button" data-act="ask">Revoke</button></div>`
@@ -66,7 +70,8 @@ async function loadMandates() {
         <td class="m-until"><span class="m-label">Until </span>${date(m.expiry)}</td>
         <td class="m-status">${STATUS[m.status] ?? esc(m.status)}</td>
         <td class="actions-cell">${actions}</td></tr>`;
-    }).join("");
+    }).join("") + (d.mandates.length > list.length || showAll ? `<tr class="mrow mrow--more"><td colspan="5"><button class="key" type="button" id="toggle-all" aria-expanded="${showAll}">${showAll ? "Show fewer" : `Show all ${d.mandates.length} mandates`}</button></td></tr>` : "");
+    $("toggle-all")?.addEventListener("click", () => { showAll = !showAll; loadMandates().then(() => $("toggle-all")?.focus()); });
   } catch (e) {
     tb.innerHTML = `<tr><td colspan="5"><p class="callout callout--error">Could not read mandate status from the chain: ${esc(e.message)}</p></td></tr>`;
   }
