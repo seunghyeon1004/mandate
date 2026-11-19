@@ -1,0 +1,116 @@
+{
+  "request": {
+    "type": "ConcordiumVerificationRequestV1",
+    "context": {
+      "type": "ConcordiumUnfilledContextInformationV1",
+      "given": [
+        {
+          "label": "Nonce",
+          "context": "88e18a5b9f7751a7b9266535bb9d804482d911f42c4f85dd53575f972406dcb1"
+        },
+        {
+          "label": "ConnectionID",
+          "context": "mandate:7da0d55c-0dd1-427e-bdd0-61394ba0bb0e"
+        },
+        {
+          "label": "ResourceID",
+          "context": "mandate-issuer"
+        },
+        {
+          "label": "ContextString",
+          "context": "Mandate 7da0d55c-0dd1-427e-bdd0-61394ba0bb0e"
+        }
+      ],
+      "requested": [
+        "BlockHash"
+      ]
+    },
+    "subjectClaims": [
+      {
+        "type": "identity",
+        "source": [
+          "accountCredential"
+        ],
+        "statements": [
+          {
+            "type": "AttributeInRange",
+            "attributeTag": "dob",
+            "lower": "18000101",
+            "upper": "20081120"
+          }
+        ],
+        "issuers": [
+          "did:ccd:testnet:idp:0"
+        ]
+      }
+    ],
+    "transactionRef": "fd61299556b68fd03c0c7517f4785abfffe961eca0bd1af4b83bffd4c631ef69"
+  },
+  "presentation": {
+    "type": [
+      "VerifiablePresentation",
+      "ConcordiumVerifiablePresentationV1"
+    ],
+    "presentationContext": {
+      "type": "ConcordiumContextInformationV1",
+      "given": [
+        {
+          "label": "Nonce",
+          "context": "88e18a5b9f7751a7b9266535bb9d804482d911f42c4f85dd53575f972406dcb1"
+        },
+        {
+          "label": "ConnectionID",
+          "context": "mandate:7da0d55c-0dd1-427e-bdd0-61394ba0bb0e"
+        },
+        {
+          "label": "ResourceID",
+          "context": "mandate-issuer"
+        },
+        {
+          "label": "ContextString",
+          "context": "Mandate 7da0d55c-0dd1-427e-bdd0-61394ba0bb0e"
+        }
+      ],
+      "requested": [
+        {
+          "label": "BlockHash",
+          "context": "28c7796ee70795ba21d59f78546614baa7912f30a80f26a7b08c355be5d4361f"
+        }
+      ]
+    },
+    "verifiableCredential": [
+      {
+        "type": [
+          "VerifiableCredential",
+          "ConcordiumVerifiableCredentialV1",
+          "ConcordiumAccountBasedCredential"
+        ],
+        "credentialSubject": {
+          "id": "did:ccd:testnet:cred:b6a19597ee04ef92b30e35aec99694c0e3e561412efd3f3ac27b1ff7f1ba4ec5b6ac831e82fd22e516ab272c3cd3419c",
+          "statement": [
+            {
+              "type": "AttributeInRange",
+              "attributeTag": "dob",
+              "lower": "18000101",
+              "upper": "20081120"
+            }
+          ]
+        },
+        "issuer": "did:ccd:testnet:idp:0",
+        "proof": {
+          "created": "2026-11-19T01:07:36.448Z",
+          "proofValue": "000000000000000102b13b19ad7d28786842f5e670b56d968f45bb5dc4049348d9b694fadad03dda7d09e8463e4a581fa8ecfee178e0c4ff7c98cf719db74da83ed6c36157b84134d636739413f6352bcc018b4e65e43bf9457ff69b20974be65d3b70be50ad78c3b0b7c4a18c64087be0051c5742cdb45078d0c277a00035bea19d4c5d719af70a2ec2369075a2c2a1bdf421cbe3393a545292da73237f0efc06e750c8a240bd178ad17f79bf2cf64bfe40af98883aa3b13b13cedd632caf8d95a8bb23592d3249494a028dd5f91e786a3b90eefd0b0b7e7d7afaa2bafe860689193676dc47b9ed713a2b59f607ec9f36d64b349165775a0b5ce23808a68a8b3d511400386f3f8a261a9acbc97484f56348cdc6101b139e9f1a9781cee8b4f8f05605d67126081bd100000007a1290c59b2331fef7e96d5609c9bdf65bc67ac8cab8c8f9938424379bc68da7481cfcda4abc7ee0eb06c7b82a48a72e7b6161de8f237b73abf2061c2a62d5773a681da51331424d04bf42e5c9b56d99d5c53e9a321999bdb45ee7ef7f53a52cd8fef7dadef1ff009f7c58a421f7150f72c4082209de89a12e245b16e5e6355aa9a5adaf0d0a1aac3b193a3c80010206f97745e5318e4e38f01c2d3b0e1cd6a1424c6bd0a33e4db5e4edaa1d8b5e416c85defe3e6255d41087d792b78618a669ab9ad69707d181fc1b2f26db0ed66d2cba40b5851795520f00f71c8d9df5a9d9d19388441d76905e43c1381223207cd65b13114613a3ed8d58e9de53bca15649ad6868d57610657c55447d81db98c3ed04bd0bd4a144caf7e9236e9a83344752b84179c4a8f08d9b242ecd1c5c9db1d06b937f16b7af24db27489a6f984cc167d4330ffd60428181152323b7b0b2245e3a86210e0faba85723395c2ea95d6acd7f57234f17c7616910a3b0b9ddd6252b55640ddaadfc45336105adc0a1d95d62ea63b35e3d4b7768172ae093208c353875ce47902af4e632d247acb01ec0eed6e654a56cdb40a30c14666c2ca65fc8eef8d9f9577114b46e650fc474e49bf384b45e9cc8afc0e473782bfd2276203d4bcefd12b7efcc94210197bb04e826b57d686793cbf82f56b666718d255a3dec7d844f7326ac5e4e1c86ec1f877936c1ac8a5230be8ebbe0dd4bf1892c5446c2e1280f642eca517b65c32980d21acf7b515acf67bf18fa8068c748c5a536249c5cbbe5e03d5f0b60aecff373be759ba557ea7f6ff970fafba6690ac0775fc95318b0aefbecef16f3f31a76f62af9c418cdb8c7c2a8601a5f64a77d4ee9e16b97629b8b496261dfbdd06a5a293316e89e3ca1ca6a88bad7c35486d9b67041fb2bca794516e8f331421ff3d9537c2decc4b166901fbacf28f25eec6065b5a7580da527265ace4b3afe9cba96a6ac53a79efe800f3a654ba6911206d82c63bf98eba51d20c58949870c3c127f17b40db63a7c5",
+          "type": "ConcordiumZKProofV4"
+        }
+      }
+    ],
+    "proof": {
+      "created": "2026-11-19T01:07:36.448Z",
+      "proofValue": "",
+      "type": "ConcordiumWeakLinkingProofV1"
+    }
+  },
+  "id": "cc70442c-b90f-4add-a766-67ce2c7a9b35",
+  "version": 1,
+  "type": "ConcordiumVerificationAuditRecord"
+}

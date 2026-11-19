@@ -8,11 +8,11 @@ import { parseArgs } from "node:util";
 import { anchorKey, anchorValue, mandateHash } from "@mandate/core";
 import { context, explorerTx, state } from "@mandate/node";
 import { anchorStatus, buildCard, issueMandate, loadMandate, pinCard, registerAgent, revokeMandate, sponsorClient, type AgentState } from "./issuer.ts";
-import { REPO_ROOT, saveState } from "@mandate/node";
+import { REPO_ROOT, STATE_DIR, saveState } from "@mandate/node";
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
-  options: { actions: { type: "string", default: "signup,post_comment,buy_report" }, domains: { type: "string", default: "localhost" }, ttl: { type: "string", default: "3600" }, "max-per": { type: "string", default: "50000" }, "max-total": { type: "string", default: "120000" } },
+  options: { actions: { type: "string", default: "signup,post_comment,buy_report" }, domains: { type: "string", default: "localhost" }, ttl: { type: "string", default: "3600" }, "max-per": { type: "string", default: "50000" }, "max-total": { type: "string", default: "120000" }, "record-base": { type: "string" } },
 });
 const [cmd, arg] = positionals;
 const ctx = await context();
@@ -27,7 +27,7 @@ switch (cmd) {
   case "issue": {
     const agent = state<AgentState>("agent.json");
     if (!agent) throw new Error("run `mandate register` first");
-    const r = await issueMandate(ctx, sponsor, agent, { actions: values.actions!.split(","), domains: values.domains!.split(","), ttlSeconds: Number(values.ttl), maxPerAction: values["max-per"]!, maxTotal: values["max-total"]! });
+    const r = await issueMandate(ctx, sponsor, agent, { actions: values.actions!.split(","), domains: values.domains!.split(","), ttlSeconds: Number(values.ttl), maxPerAction: values["max-per"]!, maxTotal: values["max-total"]!, ...(values["record-base"] ? { recordBaseUrl: values["record-base"] } : {}) });
     console.log(JSON.stringify({ id: r.signed.mandate.id, hash: r.hash, vra: explorerTx(r.txs.vra), vaa: explorerTx(r.txs.vaa), anchor: explorerTx(r.txs.anchor.hash) }, null, 2));
     break;
   }
@@ -55,6 +55,20 @@ switch (cmd) {
     const r = await pinCard(ctx, sponsor, agent, c.sha256);
     saveState("card-pin.json", r);
     console.log(JSON.stringify({ setAgentURI: explorerTx(r.tx.hash), feePayer: r.tx.feePayer, servedSha256: r.servedSha, badge_valid: r.badge.badge_valid, issues: r.badge.issues, checks: r.badge.checks }, null, 2));
+    break;
+  }
+  case "publish": {
+    // Copy a signed mandate and its audit record (public data: no keys, no personal data) into site/ for the verify page.
+    const sm = loadMandate(arg);
+    const name = positionals[2] ?? sm.mandate.id;
+    const { copyFileSync, mkdirSync, writeFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const sha = sm.mandate.adultProof!.recordSha256;
+    mkdirSync(resolve(REPO_ROOT, "site", "proofs"), { recursive: true });
+    mkdirSync(resolve(REPO_ROOT, "site", "mandates"), { recursive: true });
+    copyFileSync(resolve(STATE_DIR, "proofs", `${sha}.json`), resolve(REPO_ROOT, "site", "proofs", `${sha}.json`));
+    writeFileSync(resolve(REPO_ROOT, "site", "mandates", `${name}.json`), JSON.stringify(sm, null, 2) + "\n");
+    console.log(`published site/mandates/${name}.json and site/proofs/${sha}.json`);
     break;
   }
   default:

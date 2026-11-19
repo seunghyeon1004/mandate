@@ -234,14 +234,23 @@ export async function verifyMandateRequest(input: VerifyInput, policy: VerifyPol
   for (const [name, fn] of local) if (!(await run(name, fn))) return result();
 
   // Chain checks are independent: run them in parallel.
-  await Promise.all([
+  await Promise.all(chainChecks(signed, policy, deps.chain, run));
+  return result();
+}
+
+type Runner = (name: CheckName, fn: () => Promise<Source | void> | Source | void) => Promise<boolean>;
+
+/** The on-chain checks shared by verifyMandateRequest (relying parties) and verifyMandate (the public verify page). */
+function chainChecks(signed: SignedMandate, policy: VerifyPolicy, chain: ChainView, run: Runner): Array<Promise<boolean>> {
+  const m = signed.mandate;
+  return [
     run("human_signature", async () => {
-      const info = await deps.chain.accountInfo(m.issuer);
+      const info = await chain.accountInfo(m.issuer);
       if (!(await verifyMandateSignature(signed, info.value))) throw new Fail("bad_human_signature", "mandate signature does not match the issuer account's keys", info.source);
       return info.source;
     }),
     run("on_chain_anchor", async () => {
-      const a = await deps.chain.mandateAnchor(m.agent.tokenId, anchorKey(m.id));
+      const a = await chain.mandateAnchor(m.agent.tokenId, anchorKey(m.id));
       const p = parseAnchor(a.value);
       if (p.kind === "revoked") throw new Fail("revoked", `mandate was revoked on chain at ${new Date(p.at * 1000).toISOString()}`, a.source);
       if (p.kind === "absent") throw new Fail("not_anchored", "no on-chain anchor for this mandate", a.source);
@@ -249,7 +258,7 @@ export async function verifyMandateRequest(input: VerifyInput, policy: VerifyPol
       return a.source;
     }),
     run("agent_registry", async () => {
-      const a = await deps.chain.agent(m.agent.tokenId);
+      const a = await chain.agent(m.agent.tokenId);
       if (!a.value) throw new Fail("agent_not_found", `agent token ${m.agent.tokenId} does not exist`, a.source);
       if (a.value.status !== "Active") throw new Fail("agent_revoked", `agent status is ${a.value.status}`, a.source);
       if (a.value.owner !== m.issuer) throw new Fail("agent_not_owned_by_issuer", "agent NFT is not owned by the mandate issuer", a.source);
@@ -259,7 +268,7 @@ export async function verifyMandateRequest(input: VerifyInput, policy: VerifyPol
       return a.source;
     }),
     run("key_binding", async () => {
-      const k = await deps.chain.keyOwner(m.agentKey);
+      const k = await chain.keyOwner(m.agentKey);
       if (!k.value) throw new Fail("key_not_bound", "agent key has no CIS-8 binding", k.source);
       if (k.value.status !== "Active") throw new Fail("key_not_bound", `CIS-8 binding status is ${k.value.status}`, k.source);
       if (k.value.owner !== m.issuer) throw new Fail("key_not_bound", "agent key is bound to a different account", k.source);
@@ -270,10 +279,53 @@ export async function verifyMandateRequest(input: VerifyInput, policy: VerifyPol
         if (policy.requireAdultProof ?? true) throw new Fail("adult_proof_missing", "mandate carries no age proof");
         return "local";
       }
-      const r = await deps.chain.adultProof(m);
+      const r = await chain.adultProof(m);
       if (!r.value.ok) throw new Fail("adult_proof_invalid", r.value.reason ?? "age proof did not verify", r.source);
       return r.source;
     }),
-  ]);
-  return result();
+  ];
+}
+
+const MANDATE_ONLY: CheckName[] = ["mandate_format", "network", "validity_window", "human_signature", "on_chain_anchor", "agent_registry", "key_binding", "adult_proof"];
+
+/**
+ * Verify a signed mandate on its own (no HTTP request): structure, network, validity window, and every on-chain check.
+ * Used by the public in-browser verify page. Unlike verifyMandateRequest, chain checks run even if the window has passed,
+ * so an expired or revoked mandate shows all its evidence.
+ */
+export async function verifyMandate(signed: SignedMandate, policy: VerifyPolicy, chain: ChainView, now: number = Date.now()): Promise<VerifyResult> {
+  const checks = new Map<CheckName, Check>();
+  const run: Runner = async (name, fn) => {
+    try {
+      const src = await fn();
+      checks.set(name, { name, ok: true, source: src || "local" });
+      return true;
+    } catch (e) {
+      if (e instanceof Fail) checks.set(name, { name, ok: false, code: e.code, reason: e.why, source: e.source });
+      else checks.set(name, { name, ok: false, code: "chain_unavailable", reason: `lookup failed: ${String((e as Error)?.message ?? e).slice(0, 160)}`, source: "local" });
+      return false;
+    }
+  };
+  const m = signed.mandate;
+  let hash = "";
+  const formatOk = await run("mandate_format", () => {
+    const why = validateMandate(m);
+    if (why) throw new Fail("bad_mandate", why);
+    hash = mandateHash(m);
+  });
+  if (formatOk) {
+    await run("network", () => {
+      if (m.network !== policy.network) throw new Fail("wrong_network", `mandate is for ${m.network}, expected ${policy.network}`);
+      if (m.agent.contract.index !== policy.registry.index || m.agent.contract.subindex !== policy.registry.subindex) throw new Fail("wrong_network", "agent is not in the expected Agent Registry");
+    });
+    await run("validity_window", () => {
+      const t = Math.floor(now / 1000);
+      if (t < m.notBefore) throw new Fail("not_yet_valid", `mandate is valid from ${new Date(m.notBefore * 1000).toISOString()}`);
+      if (t >= m.expiry) throw new Fail("expired", `mandate expired at ${new Date(m.expiry * 1000).toISOString()}`);
+    });
+    await Promise.all(chainChecks(signed, policy, chain, run));
+  }
+  const list = MANDATE_ONLY.map((n) => checks.get(n) ?? { name: n, ok: null });
+  const failed = list.find((c) => c.ok === false);
+  return { ok: !failed, ...(failed ? { code: failed.code!, reason: failed.reason! } : {}), checks: list, mandate: m, ...(hash ? { mandateHash: hash } : {}) };
 }

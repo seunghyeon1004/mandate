@@ -1,0 +1,10 @@
+{
+  "name": "@mandate/verify-page",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Public in-browser verifier (GitHub Pages): runs every mandate check against Concordium testnet from the visitor's browser.",
+  "scripts": { "build": "vite build", "dev": "vite --host 127.0.0.1" },
+  "dependencies": { "@concordium/web-sdk": "12.0.2", "@mandate/chain": "0.1.0", "@mandate/core": "0.1.0" }
+}

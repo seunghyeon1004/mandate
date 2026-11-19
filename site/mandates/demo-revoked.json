@@ -1,0 +1,55 @@
+{
+  "mandate": {
+    "v": 1,
+    "id": "7da0d55c-0dd1-427e-bdd0-61394ba0bb0e",
+    "network": "ccd:4221332d34e1694168c2a0c0b3fd0f27",
+    "issuer": "4jjXocyWa2vkaRjW7BAvQEvF8zzjrLRrktDFjExXkzKMKztn3b",
+    "agent": {
+      "contract": {
+        "index": "12802",
+        "subindex": "0"
+      },
+      "tokenId": "1261"
+    },
+    "agentKey": {
+      "namespace": "solana:testnet",
+      "keyType": "ed25519",
+      "scheme": "solana-ed25519",
+      "publicKeyHex": "4b57310876f422ae3ff6df7634327d74e67111fd05b0990f64de1fb327897be8"
+    },
+    "agentWallet": "4CZmvBRju8WLtp2mrbqeZvGJ5jmPyX9p3xuNfWLHmqdfManc6U",
+    "scope": {
+      "actions": [
+        "signup",
+        "post_comment",
+        "buy_report"
+      ],
+      "domains": [
+        "localhost"
+      ],
+      "maxPerAction": {
+        "amount": "50000",
+        "asset": "CCD"
+      },
+      "maxTotal": {
+        "amount": "120000",
+        "asset": "CCD"
+      }
+    },
+    "notBefore": 1795050433,
+    "expiry": 1802826463,
+    "adultProof": {
+      "statement": "age>=18",
+      "vraTx": "fd61299556b68fd03c0c7517f4785abfffe961eca0bd1af4b83bffd4c631ef69",
+      "vaaTx": "a558967bde8edf40dd3915dcfe1bdb067a076f62e416bb4199b5d0538120b866",
+      "recordSha256": "f0910c2280e4eaab4b1025520df78b3ebcfb3e2031b991dd588a80ab915022fb",
+      "recordUrl": "https://seunghyeon1004.github.io/mandate/proofs/f0910c2280e4eaab4b1025520df78b3ebcfb3e2031b991dd588a80ab915022fb.json"
+    },
+    "nonce": "2f6578abed73ed8a05f19f9db6522088"
+  },
+  "signature": {
+    "0": {
+      "0": "81d937c4689b160ae5ebf27afa600367228f1aa2a7f8917b8f123690283e784004a2e9367d4cb44b200ab61e9e131439ee49be70d48188c7d86300018480a003"
+    }
+  }
+}
