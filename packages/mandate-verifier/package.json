@@ -1,9 +1,13 @@
 {
   "name": "@mandate/verifier",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "license": "Apache-2.0",
+  "description": "Express middleware: let AI agents with a valid Concordium mandate through instead of a CAPTCHA. Replay protection, clock skew, scope and spend caps, bounded revocation caching, x402 payer binding.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } }
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "files": ["dist"],
+  "dependencies": { "@mandate/core": "0.1.0" },
+  "peerDependencies": { "express": "^5.0.0" }
 }
