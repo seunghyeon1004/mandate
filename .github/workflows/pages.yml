@@ -2,7 +2,7 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ["site/**", "apps/verify-page/**", "packages/**", ".github/workflows/pages.yml"]
+    paths: ["site/**", "apps/verify-page/**", "packages/**", "package.json", "package-lock.json", ".github/workflows/pages.yml"]
   workflow_dispatch:
 permissions:
   contents: read
