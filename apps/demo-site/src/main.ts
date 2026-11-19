@@ -1,4 +1,4 @@
-// Demo relying party "Northwind Data" (127.0.0.1). Instead of a CAPTCHA, routes accept an AI agent with a valid Concordium mandate.
+// Demo relying party "Larchfield Reports" (127.0.0.1). Instead of a CAPTCHA, routes accept an AI agent with a valid Concordium mandate.
 //   GET  /                      the sign-up page and the live feed of agent requests (what this site decided and why)
 //   POST /api/signup            action "signup"         free, mandate required
 //   POST /api/comment           action "post_comment"   free, mandate required

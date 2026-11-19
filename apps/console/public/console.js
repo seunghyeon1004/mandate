@@ -60,11 +60,11 @@ async function loadMandates() {
       const actions = m.status === "active"
         ? `<div class="confirm" data-id="${esc(m.id)}"><button class="key key--danger" type="button" data-act="ask">Revoke</button></div>`
         : m.revoked ? `revoked in ${tx(m.revoked.tx)}` : "";
-      return `<tr data-state="${m.status === "active" ? "pass" : "skip"}">
-        <td><span class="hash">${esc(m.id.slice(0, 8))}…</span>${m.txs ? `<br><span class="small">anchor ${tx(m.txs.anchor)}</span>` : ""}</td>
-        <td>${m.scope.actions.map((a) => esc(ACTION[a] ?? a)).join(", ")} on ${m.scope.domains.map(esc).join(", ")}${caps}</td>
-        <td>${date(m.expiry)}</td>
-        <td>${STATUS[m.status] ?? esc(m.status)}</td>
+      return `<tr class="mrow" data-state="${m.status === "active" ? "pass" : "skip"}">
+        <td class="m-id"><span class="hash">${esc(m.id.slice(0, 8))}…</span>${m.txs ? `<span class="small m-anchor">anchor ${tx(m.txs.anchor)}</span>` : ""}</td>
+        <td class="m-scope">${m.scope.actions.map((a) => esc(ACTION[a] ?? a)).join(", ")} on ${m.scope.domains.map(esc).join(", ")}${caps}</td>
+        <td class="m-until"><span class="m-label">Until </span>${date(m.expiry)}</td>
+        <td class="m-status">${STATUS[m.status] ?? esc(m.status)}</td>
         <td class="actions-cell">${actions}</td></tr>`;
     }).join("");
   } catch (e) {

@@ -40,7 +40,13 @@ function entry(a) {
   if (a.receipt) bits.push(`receipt ${tx(a.receipt.tx)} ${a.receipt.status === "finalized" ? "finalized" : a.receipt.status === "failed" ? "failed" : "submitted, waiting for finality"}`);
   if (a.payment) bits.push(`paid ${ccd(a.payment.amount)} in ${tx(a.payment.tx)}`);
   if (a.mandateId) bits.push(`mandate <span class="hash">${esc(a.mandateId.slice(0, 8))}…</span>`);
-  const rows = a.result.checks.map((c, i) => `<tr data-state="${c.ok === false ? "fail" : c.ok ? "pass" : "skip"}"><td class="n">${i + 1}</td><td class="what">${esc(LABEL[c.name] ?? c.name)}</td><td class="res">${status(c.ok)}</td><td class="src">${c.ok === null ? "" : esc(SOURCE[c.source] ?? c.source ?? "")}</td><td class="detail">${c.ok === false ? esc(c.reason ?? "") : ""}</td></tr>`).join("");
+  // A rejection leads with the check that failed; the ones that passed follow; checks that never ran collapse into one quiet line.
+  const numbered = a.result.checks.map((c, i) => ({ ...c, n: i + 1 }));
+  const failed = numbered.filter((c) => c.ok === false);
+  const passed = numbered.filter((c) => c.ok === true);
+  const notRun = numbered.filter((c) => c.ok === null);
+  const tr = (c) => `<tr data-state="${c.ok === false ? "fail" : "pass"}"><td class="n">${c.n}</td><td class="what">${esc(LABEL[c.name] ?? c.name)}</td><td class="res">${status(c.ok)}</td><td class="src">${esc(SOURCE[c.source] ?? c.source ?? "")}</td><td class="detail">${c.ok === false ? esc(c.reason ?? "") : ""}</td></tr>`;
+  const rows = [...failed, ...passed].map(tr).join("") + (notRun.length ? `<tr data-state="skip"><td class="n"></td><td class="what" colspan="4">${notRun.length} later check${notRun.length === 1 ? "" : "s"} not run: the site stops at the first failure</td></tr>` : "");
   const isNew = !seen.has(a.id);
   seen.add(a.id);
   return `<li><div class="entry${isNew ? " entry--new" : ""}" data-id="${a.id}">
@@ -48,7 +54,7 @@ function entry(a) {
     <span class="entry__title">${title}</span>
     <span class="entry__verdict">${verdict}</span>
     <span class="entry__sub">${bits.join("; ")}</span>
-    <details data-id="${a.id}"${open.has(a.id) ? " open" : ""}><summary>All ${a.result.checks.length} checks</summary>
+    <details data-id="${a.id}"${open.has(a.id) ? " open" : ""}><summary>${ok ? `All ${a.result.checks.length} checks passed` : `Why it was rejected (${failed.length ? "check " + failed[0].n : "details"})`}</summary>
       <div class="scroll-x"><table class="ledger"><thead><tr><th scope="col">#</th><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Answered by</th><th scope="col">Why</th></tr></thead><tbody>${rows}</tbody></table></div>
     </details></div></li>`;
 }

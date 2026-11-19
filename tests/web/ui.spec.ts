@@ -16,6 +16,34 @@ async function axe(page: Page) {
 async function up(url: string) {
   try { return (await fetch(url, { signal: AbortSignal.timeout(2000) })).ok; } catch { return false; }
 }
+/**
+ * Layout guard: no horizontal page overflow; inside each row, no two visible cells overlap; nav links stay on one line.
+ * Catches the class of bug where a table squeezed to phone width piles its text on top of itself.
+ */
+async function layoutProblems(page: Page, rowSelector: string, cellSelector = ":scope > *"): Promise<string[]> {
+  return page.evaluate(([rowSel, cellSel]) => {
+    const out: string[] = [];
+    const de = document.documentElement;
+    if (de.scrollWidth > de.clientWidth + 1) out.push(`page overflows horizontally: ${de.scrollWidth} > ${de.clientWidth}`);
+    document.querySelectorAll(rowSel).forEach((row, ri) => {
+      const r = row.getBoundingClientRect();
+      if (r.right > de.clientWidth + 1) out.push(`row ${ri} sticks out: right ${Math.round(r.right)}`);
+      const cells = [...row.querySelectorAll(cellSel)].map((c) => ({ c, b: c.getBoundingClientRect() })).filter((x) => x.b.width > 0 && x.b.height > 0 && getComputedStyle(x.c).visibility !== "hidden");
+      for (let i = 0; i < cells.length; i++) for (let j = i + 1; j < cells.length; j++) {
+        const a = cells[i]!.b, b = cells[j]!.b;
+        const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left), oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (ox > 2 && oy > 2) out.push(`row ${ri}: cells ${i} and ${j} overlap (${Math.round(ox)}x${Math.round(oy)} px)`);
+      }
+    });
+    document.querySelectorAll(".nav a").forEach((a) => {
+      const lh = parseFloat(getComputedStyle(a).lineHeight) || parseFloat(getComputedStyle(a).fontSize) * 1.6;
+      const lines = Math.round((a.getBoundingClientRect().height - parseFloat(getComputedStyle(a).paddingTop) - parseFloat(getComputedStyle(a).paddingBottom) - parseFloat(getComputedStyle(a).borderBottomWidth)) / lh);
+      if (lines > 1) out.push(`nav link "${a.textContent}" wraps onto ${lines} lines`);
+    });
+    return out;
+  }, [rowSelector, cellSelector] as const);
+}
+
 const shot = (page: Page, name: string, project: string) => page.screenshot({ path: `${SCREENS}/${name}-${project}.png`, fullPage: true });
 
 test.describe("verify page (GitHub Pages build)", () => {
@@ -25,6 +53,8 @@ test.describe("verify page (GitHub Pages build)", () => {
     await expect(page.locator("#verdict-word")).toHaveText("Valid");
     await expect(page.locator("#ledger tbody tr[data-state=pass]")).toHaveCount(9);
     await expect(page.locator("#facts")).toContainText("Valid until");
+    await expect(page.locator("#verdict-hint")).toBeVisible();
+    expect(await layoutProblems(page, "#ledger tbody tr", ":scope > td")).toEqual([]);
     await axe(page);
     await shot(page, "verify-valid", info.project.name);
   });
@@ -37,6 +67,25 @@ test.describe("verify page (GitHub Pages build)", () => {
     await expect(page.locator("#ledger tbody tr[data-state=fail]")).toContainText("revoked");
     await axe(page);
     await shot(page, "verify-revoked", info.project.name);
+  });
+
+  test("a node or MCP outage shows 'could not check', never 'invalid'", async ({ page }) => {
+    await page.route(/grpc\.testnet\.concordium\.com|agent-registry-mcp\.concordium\.com/, (r) => r.abort("connectionrefused"));
+    await page.goto(`${VERIFY}?m=demo-valid`);
+    await expect(page.locator("#verdict-word")).toHaveText("Retrying", { timeout: 60_000 });
+    await expect(page.locator("#result")).toHaveAttribute("aria-busy", "false", { timeout: 120_000 });
+    await expect(page.locator("#verdict-word")).toHaveText("Could not check");
+    await expect(page.locator(".status--fail")).toHaveCount(0);
+    await expect(page.locator("#verdict")).not.toHaveClass(/verdict--fail/);
+  });
+
+  test("a transient outage is retried and then succeeds", async ({ page }) => {
+    let refused = 0;
+    await page.route(/grpc\.testnet\.concordium\.com/, (r) => (refused++ < 2 ? r.abort("connectionrefused") : r.continue()));
+    await page.goto(`${VERIFY}?m=demo-valid`);
+    await expect(page.locator("#verdict-word")).toHaveText("Retrying", { timeout: 60_000 });
+    await expect(page.locator("#result")).toHaveAttribute("aria-busy", "false", { timeout: 120_000 });
+    await expect(page.locator("#verdict-word")).toHaveText("Valid");
   });
 
   test("pasting something that is not a mandate shows an error, and the page works by keyboard", async ({ page }) => {
@@ -60,12 +109,14 @@ test.describe("demo relying party", () => {
     const items = page.locator("#feed > li .entry");
     test.skip((await items.count()) === 0, "no agent traffic yet");
     await expect(page.locator("#feed")).toContainText("Accepted, no puzzle");
+    await expect(page.locator("#feed details[open]")).toHaveCount(0);
+    expect(await layoutProblems(page, "#feed > li .entry", ":scope > span")).toEqual([]);
+    await shot(page, "site-feed", info.project.name);
     const summary = page.locator("#feed details summary").first();
     await summary.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator("#feed details").first().locator("table")).toBeVisible();
     await axe(page);
-    await shot(page, "site-feed", info.project.name);
   });
   test("human sign-up form validates", async ({ page }) => {
     await page.goto(SITE);
@@ -82,6 +133,7 @@ test.describe("issuer console", () => {
     await expect(page.locator("#agent-badge")).toContainText("badge valid", { timeout: 30_000 });
     await expect(page.locator("#mandates tbody tr").first()).not.toContainText("Could not", { timeout: 30_000 });
     await expect(page.locator("#log tbody tr").first()).toBeVisible();
+    expect(await layoutProblems(page, "#mandates tbody tr.mrow", ":scope > td")).toEqual([]);
     await axe(page);
     await shot(page, "console", info.project.name);
   });

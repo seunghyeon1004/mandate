@@ -187,3 +187,22 @@ fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
 .confirm .input { width: 12rem; min-height: 36px; }
 td.actions-cell { text-align: right; white-space: nowrap; }
 @media (max-width: 48rem) { td.actions-cell { text-align: left; } }
+.verdict__hint { font-size: var(--text-sm); color: var(--color-muted); max-width: 70ch; }
+.ledger tr[data-state="skip"] td, .ledger tr[data-state="unknown"] td { color: var(--color-muted); }
+.nav a { white-space: nowrap; }
+.mtable .m-anchor { display: block; }
+.mtable .m-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.mtable td.m-until { white-space: nowrap; }
+@media (max-width: 48rem) {
+  .mtable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .mtable, .mtable tbody { display: block; }
+  .mtable tr.mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2xs) var(--space-sm); padding: var(--space-md); border-bottom: var(--rule-hair) solid var(--color-rule); }
+  .mtable tr.mrow td { display: block; padding: 0; border: 0; min-width: 0; }
+  .mtable td.m-id { grid-column: 1; grid-row: 1; }
+  .mtable td.m-status { grid-column: 2; grid-row: 1; }
+  .mtable td.m-scope, .mtable td.m-until, .mtable td.actions-cell { grid-column: 1 / -1; }
+  .mtable td.m-until { white-space: normal; color: var(--color-ink-2); }
+  .mtable .m-label { position: static; width: auto; height: auto; overflow: visible; clip-path: none; color: var(--color-muted); }
+  .mtable td.actions-cell { text-align: left; white-space: normal; padding-top: var(--space-xs); }
+}
+@media (max-width: 40rem) { .nav { gap: var(--space-sm); font-size: var(--text-xs); } }

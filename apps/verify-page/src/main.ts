@@ -59,13 +59,14 @@ function evidence(name: CheckName | "badge", m: Mandate, seen: RecordingView["se
   }
 }
 
-interface BadgeResult { ok: boolean; checks?: Record<string, unknown>; card?: string; error?: string }
+interface BadgeResult { ok: boolean; unavailable?: boolean; checks?: Record<string, unknown>; card?: string; error?: string }
 
-function row(i: number, name: CheckName | "badge", c: { ok: boolean | null; source?: string; reason?: string } | null, detail: string): string {
+function row(i: number, name: CheckName | "badge", c: { ok: boolean | null; source?: string; reason?: string; unknown?: boolean } | null, detail: string): string {
   const wait = c === null;
-  const state = wait ? "wait" : c.ok === false ? "fail" : c.ok === true ? "pass" : "skip";
-  const why = c?.ok === false && c.reason ? `<strong>${esc(c.reason)}</strong>${detail ? "<br>" : ""}` : "";
-  return `<tr data-state="${state}"><td class="n">${i}</td><td class="what">${LABEL[name]}</td><td class="res">${status(c?.ok ?? null, wait)}</td><td class="src">${wait ? '<span class="skeleton" style="width:8rem"></span>' : esc(SOURCE[c?.source ?? "local"] ?? String(c?.source))}</td><td class="detail">${why}${detail}</td></tr>`;
+  const state = wait ? "wait" : c.unknown ? "unknown" : c.ok === false ? "fail" : c.ok === true ? "pass" : "skip";
+  const why = (c?.ok === false || c?.unknown) && c?.reason ? `<strong>${esc(c.reason)}</strong>${detail ? "<br>" : ""}` : "";
+  const res = c?.unknown ? `<span class="status status--warn">${ICON.skip}Could not check</span>` : status(c?.ok ?? null, wait);
+  return `<tr data-state="${state}"><td class="n">${i}</td><td class="what">${LABEL[name]}</td><td class="res">${res}</td><td class="src">${wait ? '<span class="skeleton" style="width:8rem"></span>' : esc(SOURCE[c?.source ?? "local"] ?? String(c?.source))}</td><td class="detail">${why}${detail}</td></tr>`;
 }
 
 function renderFacts(sm: SignedMandate) {
@@ -86,11 +87,39 @@ function renderFacts(sm: SignedMandate) {
 
 function setVerdict(kind: "pass" | "fail" | "wait", word: string, why: string) {
   $("verdict").className = `verdict verdict--${kind}`;
+  $("verdict-hint").hidden = true;
   $("verdict-word").innerHTML = `${kind === "pass" ? ICON.pass : kind === "fail" ? ICON.fail : ""}${esc(word)}`;
   $("verdict-why").textContent = why;
 }
 
-const WORD: Record<string, string> = { revoked: "Revoked", expired: "Expired", not_yet_valid: "Not yet valid", chain_unavailable: "Could not reach the chain" };
+const WORD: Record<string, string> = { revoked: "Revoked", expired: "Expired", not_yet_valid: "Not yet valid" };
+const ATTEMPTS = 3;
+
+/** A failure caused by the network (node, MCP or record host not answering), not by the mandate. Never shown as "invalid". */
+function transient(c: { ok: boolean | null; code?: string; reason?: string } | undefined): boolean {
+  if (!c || c.ok !== false) return false;
+  if (c.code === "chain_unavailable") return true;
+  return c.code === "adult_proof_invalid" && /unavailable|failed to fetch|timed? ?out|HTTP 5\d\d|network/i.test(c.reason ?? "");
+}
+
+interface Attempt { result: VerifyResult; view: RecordingView; badge: BadgeResult }
+
+async function attempt(sm: SignedMandate): Promise<Attempt> {
+  const mcp = new McpClient(TESTNET.mcpUrl, "testnet", 6000);
+  const client = new ConcordiumGRPCWebClient(`https://${TESTNET.grpcHost}`, TESTNET.grpcPort, { timeout: 15000 });
+  const registry = await loadRegistry(client);
+  const view = new RecordingView(new ConcordiumChainView({ client, registry, mcp, fetchRecord: defaultRecordFetcher() }));
+  const badgeP = (async (): Promise<BadgeResult> => {
+    try {
+      const a = await mcp.agentOf(sm.mandate.agent.tokenId);
+      if (!a) return { ok: false, error: "agent not found" };
+      const b = await mcp.checkBadge(a.tokenAddress);
+      return { ok: b.badge_valid && b.issues.length === 0, checks: b.checks, card: a.agentUri ?? undefined, ...(b.badge_valid ? {} : { error: `badge invalid: ${JSON.stringify(b.issues).slice(0, 160)}` }) };
+    } catch (e) { return { ok: false, unavailable: true, error: `the Agent Registry service did not answer (${(e as Error).message.slice(0, 80)})` }; }
+  })();
+  const result = await verifyMandate(sm, { network: CCD_TESTNET, registry: { index: String(TESTNET.cis8004.index), subindex: "0" } }, view);
+  return { result, view, badge: await badgeP };
+}
 
 async function run(sm: SignedMandate) {
   $("result").setAttribute("aria-busy", "true");
@@ -100,43 +129,50 @@ async function run(sm: SignedMandate) {
   const tbody = $("ledger").querySelector("tbody")!;
   tbody.innerHTML = order.map((n, i) => row(i + 1, n, null, "")).join("");
   const t0 = performance.now();
-  let result: VerifyResult;
-  let view: RecordingView;
-  const mcp = new McpClient(TESTNET.mcpUrl, "testnet", 6000);
-  let badge: BadgeResult | undefined;
-  try {
-    const client = new ConcordiumGRPCWebClient(`https://${TESTNET.grpcHost}`, TESTNET.grpcPort, { timeout: 15000 });
-    const registry = await loadRegistry(client);
-    view = new RecordingView(new ConcordiumChainView({ client, registry, mcp, fetchRecord: defaultRecordFetcher() }));
-    const badgeP = (async (): Promise<BadgeResult> => {
-      try {
-        const a = await mcp.agentOf(sm.mandate.agent.tokenId);
-        if (!a) return { ok: false, error: "agent not found" };
-        const b = await mcp.checkBadge(a.tokenAddress);
-        return { ok: b.badge_valid && b.issues.length === 0, checks: b.checks, card: a.agentUri ?? undefined, ...(b.badge_valid ? {} : { error: `badge invalid: ${JSON.stringify(b.issues).slice(0, 160)}` }) };
-      } catch (e) { return { ok: false, error: `badge check unavailable: ${(e as Error).message}` }; }
-    })();
-    result = await verifyMandate(sm, { network: CCD_TESTNET, registry: { index: String(TESTNET.cis8004.index), subindex: "0" } }, view);
-    badge = await badgeP;
-  } catch (e) {
-    setVerdict("fail", "Could not reach the chain", `The testnet node did not answer (${(e as Error).message.slice(0, 120)}). Try again in a minute.`);
-    tbody.innerHTML = order.map((n, i) => row(i + 1, n, { ok: null }, "")).join("");
+  let got: Attempt | null = null;
+  let lastError = "";
+  for (let i = 1; i <= ATTEMPTS; i++) {
+    try {
+      got = await attempt(sm);
+      const shaky = got.result.checks.some(transient) || !!got.badge.unavailable;
+      if (!shaky || i === ATTEMPTS) break;
+      lastError = "a testnet service did not answer";
+    } catch (e) {
+      got = null;
+      lastError = (e as Error).message.slice(0, 120);
+      if (i === ATTEMPTS) break;
+    }
+    setVerdict("wait", "Retrying", `Attempt ${i + 1} of ${ATTEMPTS}: ${lastError}. This is a network problem, not a problem with the mandate.`);
+    $("elapsed").textContent = `Retrying in ${2 * i} s`;
+    await new Promise((r) => setTimeout(r, 2000 * i));
+  }
+  if (!got) {
+    setVerdict("wait", "Could not check", `Concordium testnet did not answer after ${ATTEMPTS} attempts (${lastError}). This says nothing about the mandate; reload in a minute.`);
+    tbody.innerHTML = order.map((n, i) => row(i + 1, n, { ok: null, unknown: true }, "")).join("");
+    $("elapsed").textContent = "Could not reach testnet.";
     $("result").setAttribute("aria-busy", "false");
     return;
   }
+  const { result, view, badge } = got;
   const hash = mandateHash(sm.mandate);
   const byName = new Map<string, Check>(result.checks.map((c) => [c.name, c]));
   tbody.innerHTML = order.map((n, i) => {
-    if (n === "badge") return row(i + 1, n, { ok: badge!.ok, source: "mcp", ...(badge!.error ? { reason: badge!.error } : {}) }, evidence(n, sm.mandate, view.seen, hash, badge));
+    if (n === "badge") return row(i + 1, n, { ok: badge.unavailable ? null : badge.ok, unknown: !!badge.unavailable, source: "mcp", ...(badge.error ? { reason: badge.error } : {}) }, evidence(n, sm.mandate, view.seen, hash, badge));
     const c = byName.get(n)!;
-    return row(i + 1, n, c, evidence(n, sm.mandate, view.seen, hash));
+    return row(i + 1, n, transient(c) ? { ...c, ok: null, unknown: true } : c, evidence(n, sm.mandate, view.seen, hash));
   }).join("");
-  $("elapsed").textContent = `${result.checks.filter((c) => c.ok).length + (badge?.ok ? 1 : 0)} of ${order.length} passed in ${((performance.now() - t0) / 1000).toFixed(1)} s, live from testnet.`;
-  if (result.ok) setVerdict("pass", "Valid", "A website would accept this agent's signed requests within the scope above, instead of showing a CAPTCHA.");
-  else if (result.code === "revoked") {
+  const unknown = result.checks.filter(transient).length + (badge.unavailable ? 1 : 0);
+  const passed = result.checks.filter((c) => c.ok).length + (badge.ok ? 1 : 0);
+  $("elapsed").textContent = `${passed} of ${order.length} passed${unknown ? `, ${unknown} could not be checked` : ""} in ${((performance.now() - t0) / 1000).toFixed(1)} s, live from testnet.`;
+  const realFail = result.checks.find((c) => c.ok === false && !transient(c));
+  if (result.ok) {
+    setVerdict("pass", "Valid", "A website would accept this agent's signed requests within the scope above, instead of showing a CAPTCHA.");
+    $("verdict-hint").hidden = false;
+  } else if (realFail?.code === "revoked") {
     const at = /^revoked\|at:(\d+)$/.exec(String(view.seen.anchor ?? ""))?.[1];
     setVerdict("fail", "Revoked", `The issuer revoked this mandate on chain${at ? ` on ${fmtDate(Number(at))}` : ""}. Websites now reject the agent's requests; the demo site notices within its 10-second cache bound.`);
-  } else setVerdict("fail", WORD[result.code!] ?? "Rejected", result.reason ?? "");
+  } else if (realFail) setVerdict("fail", WORD[realFail.code!] ?? "Rejected", realFail.reason ?? "");
+  else setVerdict("wait", "Could not check", "Every check that ran passed, but part of testnet did not answer after 3 attempts. This says nothing against the mandate; reload in a minute.");
   $("result").setAttribute("aria-busy", "false");
 }
 

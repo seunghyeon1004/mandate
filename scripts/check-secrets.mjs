@@ -17,7 +17,8 @@ function collectNeedles() {
   const add = (v) => { if (typeof v === "string" && v.trim().length >= 16) needles.add(v.trim()); };
   const walk = (o) => { if (typeof o === "string") add(o); else if (o && typeof o === "object") Object.values(o).forEach(walk); };
   const files = [];
-  if (existsSync(secretsDir)) for (const f of readdirSync(secretsDir)) { const p = join(secretsDir, f); if (statSync(p).isFile()) files.push(p); }
+  const walkDir = (d) => { for (const f of readdirSync(d)) { const p = join(d, f); const st = statSync(p); if (st.isDirectory()) walkDir(p); else if (st.isFile()) files.push(p); } };
+  if (existsSync(secretsDir)) walkDir(secretsDir);
   if (existsSync(extraEnv)) files.push(extraEnv);
   for (const p of files) {
     const text = readFileSync(p, "utf8");
